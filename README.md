@@ -10,7 +10,7 @@ Works with pfSense CE and pfSense Plus.
 
 - Zabbix Server 7.0 or higher
 - pfSense 2.6 or higher (CE or Plus)
-- SNMP service enabled on pfSense (see setup below)
+- SNMP service enabled on pfSense
 
 ---
 
