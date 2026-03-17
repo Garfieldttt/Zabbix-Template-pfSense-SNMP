@@ -192,12 +192,3 @@ The template includes a pre-built dashboard **"pfSense Overview"** with the foll
 | pf Rules | Traffic counters per named pf firewall rule |
 
 ---
-
-## 7. Notes
-
-- **pf module not loaded:** If all pf items show "not supported", the `snmp_pf.so` module is not active. Enable it under Services → SNMP → Modules and restart the SNMP service.
-- **pf Labels (rule counters):** Only rules with a `label` in `pf.conf` are discoverable. Rules without labels do not appear in the BEGEMOT-PF-MIB pfLabelsTable. Named rules in pfSense can be set under Firewall → Rules → Advanced → Label.
-- **Interface filter:** `pflog`, `pfsync`, `enc`, and `lo` interfaces are excluded by default via `{$NET.IF.IFNAME.NOT_MATCHES}`. Add additional interfaces to suppress if needed.
-- **Version check:** `{$PFSENSE.VERSION.EXPECTED}` must be updated manually when a new pfSense CE release is available. The template fetches the available version from the Netgate docs page.
-- **pfSense Plus:** The version check is tuned for pfSense CE (`2.x.y` format). For pfSense Plus, adjust the `{$PFSENSE.VERSION.EXPECTED}` macro and the version parsing regex accordingly.
-- **CPU temperatures:** Not available via SNMP on pfSense. Requires a custom agent or script.
