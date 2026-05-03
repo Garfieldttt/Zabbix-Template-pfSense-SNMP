@@ -11,76 +11,11 @@ zabbix_export:
         Zabbix template for monitoring pfSense firewalls via SNMP (bsnmpd). No Zabbix agent is required.
         
         Created by Thomas Rzen.
+        For documentation, updates, and source code, visit:
+        https://github.com/Garfieldttt/Zabbix-Template-pfSense-SNMP
       groups:
         - name: 'Templates/Network appliances'
       items:
-        - uuid: 05c0c60ee1c84538bce41d2cb94895b2
-          name: 'ICMP ping'
-          type: SIMPLE
-          key: icmpping
-          description: |
-            Host accessibility by ICMP ping.
-            0 = unreachable, 1 = reachable.
-          valuemap:
-            name: 'Service state'
-          tags:
-            - tag: component
-              value: health
-          triggers:
-            - uuid: e55f8aeaebd04c6c99470ec8b83bbfaf
-              expression: 'max(/pfSense by SNMP/icmpping,#3)=0'
-              name: 'pfSense: Unavailable by ICMP ping'
-              priority: DISASTER
-              description: 'Last three ICMP attempts timed out. Check device connectivity.'
-              tags:
-                - tag: scope
-                  value: availability
-        - uuid: 9cbc3625fe364255a617bdeb5caaaaba
-          name: 'ICMP loss'
-          type: SIMPLE
-          key: icmppingloss
-          value_type: FLOAT
-          units: '%'
-          description: 'Percentage of lost ICMP packets.'
-          tags:
-            - tag: component
-              value: health
-          triggers:
-            - uuid: eca1a34680e8449e9c4e9261c38f52a4
-              expression: 'min(/pfSense by SNMP/icmppingloss,5m)>{$ICMP_LOSS_WARN} and min(/pfSense by SNMP/icmppingloss,5m)<100'
-              name: 'pfSense: High ICMP packet loss'
-              opdata: 'Loss: {ITEM.LASTVALUE1}'
-              priority: AVERAGE
-              dependencies:
-                - name: 'pfSense: Unavailable by ICMP ping'
-                  expression: 'max(/pfSense by SNMP/icmpping,#3)=0'
-              tags:
-                - tag: scope
-                  value: availability
-        - uuid: 0124a0ec5aea4b6397b957ac4b77930b
-          name: 'ICMP response time'
-          type: SIMPLE
-          key: icmppingsec
-          value_type: FLOAT
-          units: s
-          description: 'ICMP ping response time in seconds.'
-          tags:
-            - tag: component
-              value: health
-          triggers:
-            - uuid: 37b7b394b9b54c79bdc6d23654e7eea9
-              expression: 'avg(/pfSense by SNMP/icmppingsec,5m)>{$ICMP_RESPONSE_TIME_WARN}'
-              name: 'pfSense: High ICMP response time'
-              opdata: 'Value: {ITEM.LASTVALUE1}'
-              priority: WARNING
-              dependencies:
-                - name: 'pfSense: High ICMP packet loss'
-                  expression: 'min(/pfSense by SNMP/icmppingloss,5m)>{$ICMP_LOSS_WARN} and min(/pfSense by SNMP/icmppingloss,5m)<100'
-                - name: 'pfSense: Unavailable by ICMP ping'
-                  expression: 'max(/pfSense by SNMP/icmpping,#3)=0'
-              tags:
-                - tag: scope
-                  value: availability
         - uuid: 82ebbf2d4ac74bf8b1b7fcaa3f0f1b54
           name: 'IP: Forwarded datagrams rate'
           type: SNMP_AGENT
@@ -1917,199 +1852,254 @@ zabbix_export:
               widgets:
                 - type: item
                   name: 'pf Firewall Status'
-                  width: '17'
+                  width: '9'
                   height: '3'
                   fields:
                     - type: ITEM
-                      name: itemid.0
+                      name: itemid
                       value:
                         host: 'pfSense by SNMP'
                         key: pf.running
+                    - type: INTEGER
+                      name: show_description
+                      value: '0'
                 - type: problems
                   name: 'Active Problems'
                   'y': '3'
-                  width: '72'
+                  width: '36'
                   height: '5'
+                  fields:
+                    - type: INTEGER
+                      name: show_suppressed
+                      value: '0'
                 - type: item
                   name: 'pf State Table: Current'
                   'y': '8'
-                  width: '24'
+                  width: '12'
                   height: '3'
                   fields:
                     - type: ITEM
-                      name: itemid.0
+                      name: itemid
                       value:
                         host: 'pfSense by SNMP'
                         key: pf.states.current
+                    - type: INTEGER
+                      name: show_description
+                      value: '0'
                 - type: item
                   name: 'CPU Utilization'
                   'y': '11'
-                  width: '18'
+                  width: '9'
                   height: '3'
                   fields:
                     - type: ITEM
-                      name: itemid.0
+                      name: itemid
                       value:
                         host: 'pfSense by SNMP'
                         key: system.cpu.util
+                    - type: INTEGER
+                      name: show_description
+                      value: '0'
                 - type: item
                   name: 'System Description'
                   'y': '14'
-                  width: '23'
+                  width: '18'
                   height: '3'
                   fields:
                     - type: ITEM
-                      name: itemid.0
+                      name: itemid
                       value:
                         host: 'pfSense by SNMP'
                         key: system.descr
+                    - type: INTEGER
+                      name: show_description
+                      value: '0'
                 - type: item
                   name: 'Version: Installed'
                   'y': '17'
-                  width: '36'
+                  width: '18'
                   height: '3'
                   fields:
                     - type: ITEM
-                      name: itemid.0
+                      name: itemid
                       value:
                         host: 'pfSense by SNMP'
                         key: pfsense.version
+                    - type: INTEGER
+                      name: show_description
+                      value: '0'
                 - type: item
                   name: 'System Uptime'
-                  x: '17'
-                  width: '17'
+                  x: '9'
+                  width: '9'
                   height: '3'
                   fields:
                     - type: ITEM
-                      name: itemid.0
+                      name: itemid
                       value:
                         host: 'pfSense by SNMP'
                         key: system.uptime
+                    - type: INTEGER
+                      name: show_description
+                      value: '0'
                 - type: item
                   name: 'Memory Utilization'
-                  x: '18'
+                  x: '9'
                   'y': '11'
-                  width: '18'
+                  width: '9'
                   height: '3'
                   fields:
                     - type: ITEM
-                      name: itemid.0
+                      name: itemid
                       value:
                         host: 'pfSense by SNMP'
                         key: vm.memory.util
-                - type: item
-                  name: 'System Location'
-                  x: '23'
-                  'y': '14'
-                  width: '25'
-                  height: '3'
-                  fields:
-                    - type: ITEM
-                      name: itemid.0
-                      value:
-                        host: 'pfSense by SNMP'
-                        key: system.location
+                    - type: INTEGER
+                      name: show_description
+                      value: '0'
                 - type: item
                   name: 'pf State Table: Limit'
-                  x: '24'
+                  x: '12'
                   'y': '8'
-                  width: '25'
+                  width: '12'
                   height: '3'
                   fields:
                     - type: ITEM
-                      name: itemid.0
+                      name: itemid
                       value:
                         host: 'pfSense by SNMP'
                         key: pf.states.limit
+                    - type: INTEGER
+                      name: show_description
+                      value: '0'
                 - type: item
                   name: 'pf State Table Utilization'
-                  x: '34'
-                  width: '18'
+                  x: '18'
+                  width: '9'
                   height: '3'
                   fields:
                     - type: ITEM
-                      name: itemid.0
+                      name: itemid
                       value:
                         host: 'pfSense by SNMP'
                         key: pf.states.util
+                    - type: INTEGER
+                      name: show_description
+                      value: '0'
                 - type: item
                   name: 'Swap Utilization'
-                  x: '36'
+                  x: '18'
                   'y': '11'
-                  width: '18'
+                  width: '9'
                   height: '3'
                   fields:
                     - type: ITEM
-                      name: itemid.0
+                      name: itemid
                       value:
                         host: 'pfSense by SNMP'
                         key: vm.memory.swap.util
+                    - type: INTEGER
+                      name: show_description
+                      value: '0'
+                - type: item
+                  name: 'System Location'
+                  x: '18'
+                  'y': '14'
+                  width: '9'
+                  height: '3'
+                  fields:
+                    - type: ITEM
+                      name: itemid
+                      value:
+                        host: 'pfSense by SNMP'
+                        key: system.location
+                    - type: INTEGER
+                      name: show_description
+                      value: '0'
                 - type: item
                   name: 'Version: Available'
-                  x: '36'
+                  x: '18'
                   'y': '17'
-                  width: '36'
-                  height: '3'
-                  fields:
-                    - type: ITEM
-                      name: itemid.0
-                      value:
-                        host: 'pfSense by SNMP'
-                        key: pfsense.version.available
-                - type: item
-                  name: 'System Contact'
-                  x: '48'
-                  'y': '14'
-                  width: '24'
-                  height: '3'
-                  fields:
-                    - type: ITEM
-                      name: itemid.0
-                      value:
-                        host: 'pfSense by SNMP'
-                        key: system.contact
-                - type: item
-                  name: 'Source Nodes'
-                  x: '49'
-                  'y': '8'
-                  width: '23'
-                  height: '3'
-                  fields:
-                    - type: ITEM
-                      name: itemid.0
-                      value:
-                        host: 'pfSense by SNMP'
-                        key: pf.src.nodes
-                - type: item
-                  name: 'System Hostname'
-                  x: '52'
-                  width: '20'
-                  height: '3'
-                  fields:
-                    - type: ITEM
-                      name: itemid.0
-                      value:
-                        host: 'pfSense by SNMP'
-                        key: system.hostname
-                - type: item
-                  name: 'IP Forwarding'
-                  x: '54'
-                  'y': '11'
                   width: '18'
                   height: '3'
                   fields:
                     - type: ITEM
-                      name: itemid.0
+                      name: itemid
+                      value:
+                        host: 'pfSense by SNMP'
+                        key: pfsense.version.available
+                    - type: INTEGER
+                      name: show_description
+                      value: '0'
+                - type: item
+                  name: 'Source Nodes'
+                  x: '24'
+                  'y': '8'
+                  width: '12'
+                  height: '3'
+                  fields:
+                    - type: ITEM
+                      name: itemid
+                      value:
+                        host: 'pfSense by SNMP'
+                        key: pf.src.nodes
+                    - type: INTEGER
+                      name: show_description
+                      value: '0'
+                - type: item
+                  name: 'System Hostname'
+                  x: '27'
+                  width: '9'
+                  height: '3'
+                  fields:
+                    - type: ITEM
+                      name: itemid
+                      value:
+                        host: 'pfSense by SNMP'
+                        key: system.hostname
+                    - type: INTEGER
+                      name: show_description
+                      value: '0'
+                - type: item
+                  name: 'IP Forwarding'
+                  x: '27'
+                  'y': '11'
+                  width: '9'
+                  height: '3'
+                  fields:
+                    - type: ITEM
+                      name: itemid
                       value:
                         host: 'pfSense by SNMP'
                         key: system.ipforward
+                    - type: INTEGER
+                      name: show_description
+                      value: '0'
+                - type: item
+                  name: 'System Contact'
+                  x: '27'
+                  'y': '14'
+                  width: '9'
+                  height: '3'
+                  fields:
+                    - type: ITEM
+                      name: itemid
+                      value:
+                        host: 'pfSense by SNMP'
+                        key: system.contact
+                    - type: INTEGER
+                      name: show_description
+                      value: '0'
             - name: Interfaces
               widgets:
                 - type: graphprototype
                   name: 'Interface Traffic'
-                  width: '72'
+                  width: '36'
                   height: '8'
                   fields:
+                    - type: INTEGER
+                      name: columns
+                      value: '2'
                     - type: GRAPH_PROTOTYPE
                       name: graphid.0
                       value:
@@ -2122,20 +2112,26 @@ zabbix_export:
               widgets:
                 - type: item
                   name: 'CPU Utilization'
-                  width: '17'
+                  width: '9'
                   height: '3'
                   fields:
                     - type: ITEM
-                      name: itemid.0
+                      name: itemid
                       value:
                         host: 'pfSense by SNMP'
                         key: system.cpu.util
+                    - type: INTEGER
+                      name: show_description
+                      value: '1'
                 - type: graphprototype
                   name: 'CPU Utilization per Core'
                   'y': '3'
-                  width: '72'
+                  width: '36'
                   height: '7'
                   fields:
+                    - type: INTEGER
+                      name: columns
+                      value: '2'
                     - type: GRAPH_PROTOTYPE
                       name: graphid.0
                       value:
@@ -2147,9 +2143,12 @@ zabbix_export:
                 - type: graphprototype
                   name: 'Storage Utilization'
                   'y': '10'
-                  width: '36'
+                  width: '18'
                   height: '7'
                   fields:
+                    - type: INTEGER
+                      name: columns
+                      value: '2'
                     - type: GRAPH_PROTOTYPE
                       name: graphid.0
                       value:
@@ -2160,33 +2159,42 @@ zabbix_export:
                       value: CCPFS
                 - type: item
                   name: 'Memory Utilization'
-                  x: '17'
-                  width: '18'
+                  x: '9'
+                  width: '9'
                   height: '3'
                   fields:
                     - type: ITEM
-                      name: itemid.0
+                      name: itemid
                       value:
                         host: 'pfSense by SNMP'
                         key: vm.memory.util
+                    - type: INTEGER
+                      name: show_description
+                      value: '1'
                 - type: item
                   name: 'Swap Utilization'
-                  x: '35'
-                  width: '17'
+                  x: '18'
+                  width: '9'
                   height: '3'
                   fields:
                     - type: ITEM
-                      name: itemid.0
+                      name: itemid
                       value:
                         host: 'pfSense by SNMP'
                         key: vm.memory.swap.util
+                    - type: INTEGER
+                      name: show_description
+                      value: '1'
                 - type: graphprototype
                   name: 'Disk I/O Throughput'
-                  x: '36'
+                  x: '18'
                   'y': '10'
-                  width: '36'
+                  width: '18'
                   height: '7'
                   fields:
+                    - type: INTEGER
+                      name: columns
+                      value: '2'
                     - type: GRAPH_PROTOTYPE
                       name: graphid.0
                       value:
@@ -2197,33 +2205,42 @@ zabbix_export:
                       value: DDPFS
                 - type: item
                   name: 'Load Average (5 min)'
-                  x: '52'
-                  width: '20'
+                  x: '27'
+                  width: '9'
                   height: '3'
                   fields:
                     - type: ITEM
-                      name: itemid.0
+                      name: itemid
                       value:
                         host: 'pfSense by SNMP'
                         key: system.load.avg5
+                    - type: INTEGER
+                      name: show_description
+                      value: '1'
             - name: 'pf Firewall'
               widgets:
                 - type: item
                   name: 'New Connections/s'
-                  width: '17'
+                  width: '9'
                   height: '3'
                   fields:
                     - type: ITEM
-                      name: itemid.0
+                      name: itemid
                       value:
                         host: 'pfSense by SNMP'
                         key: pf.states.inserts.rate
+                    - type: INTEGER
+                      name: show_description
+                      value: '0'
                 - type: graphprototype
                   name: 'pf Pass vs Block per Interface (inbound)'
                   'y': '3'
-                  width: '33'
+                  width: '18'
                   height: '7'
                   fields:
+                    - type: INTEGER
+                      name: columns
+                      value: '2'
                     - type: GRAPH_PROTOTYPE
                       name: graphid.0
                       value:
@@ -2234,33 +2251,42 @@ zabbix_export:
                       value: EEPFS
                 - type: item
                   name: 'Closed Connections/s'
-                  x: '17'
-                  width: '16'
+                  x: '9'
+                  width: '9'
                   height: '3'
                   fields:
                     - type: ITEM
-                      name: itemid.0
+                      name: itemid
                       value:
                         host: 'pfSense by SNMP'
                         key: pf.states.removals.rate
+                    - type: INTEGER
+                      name: show_description
+                      value: '0'
                 - type: item
                   name: 'IPv4 Inbound Passed/s'
-                  x: '33'
-                  width: '20'
+                  x: '18'
+                  width: '9'
                   height: '3'
                   fields:
                     - type: ITEM
-                      name: itemid.0
+                      name: itemid
                       value:
                         host: 'pfSense by SNMP'
                         key: pf.log.ip4.in.pass.rate
+                    - type: INTEGER
+                      name: show_description
+                      value: '0'
                 - type: graphprototype
                   name: 'pf Pass vs Block per Interface (outbound)'
-                  x: '33'
+                  x: '18'
                   'y': '3'
-                  width: '39'
+                  width: '18'
                   height: '7'
                   fields:
+                    - type: INTEGER
+                      name: columns
+                      value: '2'
                     - type: GRAPH_PROTOTYPE
                       name: graphid.0
                       value:
@@ -2271,20 +2297,23 @@ zabbix_export:
                       value: FFPFS
                 - type: item
                   name: 'IPv4 Inbound Dropped/s'
-                  x: '53'
-                  width: '19'
+                  x: '27'
+                  width: '9'
                   height: '3'
                   fields:
                     - type: ITEM
-                      name: itemid.0
+                      name: itemid
                       value:
                         host: 'pfSense by SNMP'
                         key: pf.log.ip4.in.drop.rate
+                    - type: INTEGER
+                      name: show_description
+                      value: '0'
             - name: 'pf Tables'
               widgets:
                 - type: graphprototype
                   name: 'pf Table Match Rates'
-                  width: '72'
+                  width: '36'
                   height: '8'
                   fields:
                     - type: INTEGER
@@ -2302,7 +2331,7 @@ zabbix_export:
               widgets:
                 - type: graphprototype
                   name: 'pf Rule Traffic'
-                  width: '72'
+                  width: '36'
                   height: '10'
                   fields:
                     - type: INTEGER
