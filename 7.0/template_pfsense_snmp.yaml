@@ -1297,6 +1297,33 @@ zabbix_export:
           value: interface
         - tag: interface
           value: '{#SNMPVALUE}'
+      - uuid: 2cce1db27cc94521a5f528e4a9213047
+        name: 'Interface {#SNMPVALUE}: Traffic monitoring'
+        type: SNMP_AGENT
+        snmp_oid: get[1.3.6.1.2.1.2.2.1.3.{#SNMPINDEX}]
+        key: net.if.traffic.support[{#SNMPVALUE}]
+        delay: 1h
+        history: 1w
+        trends: '0'
+        value_type: CHAR
+        description: 'Indicates whether IF-MIB octet counters are functional for this interface. tun/virtual interface types (ifType 131=tunnel, 53=propVirtual) always report 0 bps on FreeBSD because the tun driver does not populate ifHCIn/OutOctets in bsnmpd.'
+        preprocessing:
+        - type: JAVASCRIPT
+          parameters:
+          - |
+            var t = parseInt(value);
+            if (t === 131) return "Not supported — tunnel interface (gif/gre/ipsec/wireguard), FreeBSD tun driver does not expose octet counters via IF-MIB";
+            if (t === 53)  return "Not supported — propVirtual interface (vlan/lagg), FreeBSD tun driver does not expose octet counters via IF-MIB";
+            if (t === 24)  return "Not supported — loopback interface";
+            return "Supported";
+        - type: DISCARD_UNCHANGED_HEARTBEAT
+          parameters:
+          - 1d
+        tags:
+        - tag: component
+          value: interface
+        - tag: interface
+          value: '{#SNMPVALUE}'
       graph_prototypes:
       - uuid: a9bedf796f94412ba9a48d2a536708e2
         name: 'Interface {#SNMPVALUE}: Traffic'
