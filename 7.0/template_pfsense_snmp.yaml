@@ -7,12 +7,7 @@ zabbix_export:
   - uuid: 4c76bf44638d4eb58b3c626059abae32
     template: pfSense by SNMP
     name: pfSense by SNMP
-    description: |
-      Zabbix template for monitoring pfSense firewalls via SNMP (bsnmpd). No Zabbix agent is required.
-
-      Created by Thomas Rzen.
-      For documentation, updates, and source code, visit:
-      https://github.com/Garfieldttt/Zabbix-Template-pfSense-SNMP
+    description: 'Zabbix template for monitoring pfSense firewalls via SNMP (bsnmpd). No Zabbix agent required. Created by Thomas Rzen. https://github.com/Garfieldttt/Zabbix-Template-pfSense-SNMP'
     groups:
     - name: Templates/Network appliances
     macros:
