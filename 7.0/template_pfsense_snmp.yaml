@@ -1163,7 +1163,7 @@ zabbix_export:
         history: 1w
         value_type: UNSIGNED
         units: bps
-        description: ifHCInOctets — inbound octets (Counter64), converted to bits per second.
+        description: 'ifHCInOctets — inbound octets (Counter64), converted to bits per second. Note: tun/virtual interfaces (tailscale, wireguard, gif, gre) always report 0 due to a FreeBSD bsnmpd limitation — the tun driver does not populate IF-MIB octet counters.'
         preprocessing:
         - type: CHANGE_PER_SECOND
           parameters:
@@ -1195,7 +1195,7 @@ zabbix_export:
         history: 1w
         value_type: UNSIGNED
         units: bps
-        description: ifHCOutOctets — outbound octets (Counter64), converted to bits per second.
+        description: 'ifHCOutOctets — outbound octets (Counter64), converted to bits per second. Note: tun/virtual interfaces (tailscale, wireguard, gif, gre) always report 0 due to a FreeBSD bsnmpd limitation — the tun driver does not populate IF-MIB octet counters.'
         preprocessing:
         - type: CHANGE_PER_SECOND
           parameters:
