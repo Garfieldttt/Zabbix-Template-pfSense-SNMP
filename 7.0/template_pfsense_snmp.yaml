@@ -19,13 +19,7 @@ zabbix_export:
     - macro: '{$SNMP_COMMUNITY}'
       value: public
       description: SNMP v2c community string
-    - macro: '{$ICMP_LOSS_WARN}'
-      value: '20'
-      description: Warning threshold for ICMP packet loss (%)
-    - macro: '{$ICMP_RESPONSE_TIME_WARN}'
-      value: '0.15'
-      description: Warning threshold for ICMP response time (seconds)
-    - macro: '{$CPU.UTIL.CRIT}'
+- macro: '{$CPU.UTIL.CRIT}'
       value: '90'
       description: Critical CPU utilization threshold (%)
     - macro: '{$MEMORY.UTIL.MAX}'
@@ -116,75 +110,6 @@ zabbix_export:
       value: '1'
       description: Enable entry count alert for sshlockout table
     items:
-    - uuid: 05c0c60ee1c84538bce41d2cb94895b2
-      name: ICMP ping
-      type: SIMPLE
-      key: icmpping
-      description: 'Host accessibility by ICMP ping.
-
-        0 = unreachable, 1 = reachable.
-
-        '
-      valuemap:
-        name: Service state
-      tags:
-      - tag: component
-        value: health
-      triggers:
-      - uuid: e55f8aeaebd04c6c99470ec8b83bbfaf
-        expression: max(/pfSense by SNMP/icmpping,#3)=0
-        name: 'pfSense: Unavailable by ICMP ping'
-        priority: DISASTER
-        description: Last three ICMP attempts timed out. Check device connectivity.
-        tags:
-        - tag: scope
-          value: availability
-    - uuid: 9cbc3625fe364255a617bdeb5caaaaba
-      name: ICMP loss
-      type: SIMPLE
-      key: icmppingloss
-      value_type: FLOAT
-      units: '%'
-      description: Percentage of lost ICMP packets.
-      tags:
-      - tag: component
-        value: health
-      triggers:
-      - uuid: eca1a34680e8449e9c4e9261c38f52a4
-        expression: min(/pfSense by SNMP/icmppingloss,5m)>{$ICMP_LOSS_WARN} and min(/pfSense by SNMP/icmppingloss,5m)<100
-        name: 'pfSense: High ICMP packet loss'
-        opdata: 'Loss: {ITEM.LASTVALUE1}'
-        priority: AVERAGE
-        dependencies:
-        - name: 'pfSense: Unavailable by ICMP ping'
-          expression: max(/pfSense by SNMP/icmpping,#3)=0
-        tags:
-        - tag: scope
-          value: availability
-    - uuid: 0124a0ec5aea4b6397b957ac4b77930b
-      name: ICMP response time
-      type: SIMPLE
-      key: icmppingsec
-      value_type: FLOAT
-      units: s
-      description: ICMP ping response time in seconds.
-      tags:
-      - tag: component
-        value: health
-      triggers:
-      - uuid: 37b7b394b9b54c79bdc6d23654e7eea9
-        expression: avg(/pfSense by SNMP/icmppingsec,5m)>{$ICMP_RESPONSE_TIME_WARN}
-        name: 'pfSense: High ICMP response time'
-        opdata: 'Value: {ITEM.LASTVALUE1}'
-        priority: WARNING
-        dependencies:
-        - name: 'pfSense: Unavailable by ICMP ping'
-          expression: max(/pfSense by SNMP/icmpping,#3)=0
-        - name: 'pfSense: High ICMP packet loss'
-          expression: min(/pfSense by SNMP/icmppingloss,5m)>{$ICMP_LOSS_WARN} and min(/pfSense by SNMP/icmppingloss,5m)<100
-        tags:
-        - tag: scope
-          value: availability
     - uuid: 5a131ae12b0644718aa722adbe092b9c
       name: System description
       type: SNMP_AGENT
