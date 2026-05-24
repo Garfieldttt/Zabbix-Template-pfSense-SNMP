@@ -19,7 +19,7 @@ zabbix_export:
     - macro: '{$SNMP_COMMUNITY}'
       value: public
       description: SNMP v2c community string
-- macro: '{$CPU.UTIL.CRIT}'
+    - macro: '{$CPU.UTIL.CRIT}'
       value: '90'
       description: Critical CPU utilization threshold (%)
     - macro: '{$MEMORY.UTIL.MAX}'
