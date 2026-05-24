@@ -1,2409 +1,2584 @@
 zabbix_export:
   version: '7.0'
   template_groups:
-    - uuid: 36bff6c29af64692839d077febfc7079
-      name: 'Templates/Network appliances'
+  - uuid: 36bff6c29af64692839d077febfc7079
+    name: Templates/Network appliances
   templates:
-    - uuid: 4c76bf44638d4eb58b3c626059abae32
-      template: 'pfSense by SNMP'
-      name: 'pfSense by SNMP'
-      description: |
-        Zabbix template for monitoring pfSense firewalls via SNMP (bsnmpd). No Zabbix agent is required.
-        
-        Created by Thomas Rzen.
-        For documentation, updates, and source code, visit:
-        https://github.com/Garfieldttt/Zabbix-Template-pfSense-SNMP
-      groups:
-        - name: 'Templates/Network appliances'
-      items:
-        - uuid: 82ebbf2d4ac74bf8b1b7fcaa3f0f1b54
-          name: 'IP: Forwarded datagrams rate'
-          type: SNMP_AGENT
-          snmp_oid: 'get[1.3.6.1.2.1.4.6.0]'
-          key: ip.forw.datagrams.rate
-          delay: '60'
-          history: 1w
-          value_type: FLOAT
-          units: pps
-          description: 'ipForwDatagrams — IP datagrams forwarded per second (routing traffic through pfSense).'
-          preprocessing:
-            - type: CHANGE_PER_SECOND
-              parameters:
-                - ''
-          tags:
-            - tag: component
-              value: network
-        - uuid: b067b2323db94099b10f2c1e4ec5e199
-          name: 'IP: Inbound discards rate'
-          type: SNMP_AGENT
-          snmp_oid: 'get[1.3.6.1.2.1.4.8.0]'
-          key: ip.in.discards.rate
-          delay: '60'
-          history: 1w
-          value_type: FLOAT
-          units: pps
-          description: 'ipInDiscards — inbound IP datagrams discarded per second despite no errors (e.g. buffer overflow).'
-          preprocessing:
-            - type: CHANGE_PER_SECOND
-              parameters:
-                - ''
-          tags:
-            - tag: component
-              value: network
-          triggers:
-            - uuid: 1ee7ab8f8c7d4c71a99963419eee1966
-              expression: 'avg(/pfSense by SNMP/ip.in.discards.rate,5m)>0'
-              name: 'pfSense: IP inbound datagrams being discarded'
-              opdata: 'Rate: {ITEM.LASTVALUE1}/s'
-              priority: WARNING
-              description: 'IP datagrams are being discarded on inbound. May indicate buffer overflow or resource exhaustion.'
-              tags:
-                - tag: scope
-                  value: performance
-        - uuid: 3449a90610f844ec941d44d332761b7f
-          name: 'pf: Bad offset packets rate'
-          type: SNMP_AGENT
-          snmp_oid: 'get[1.3.6.1.4.1.12325.1.200.1.2.2.0]'
-          key: pf.counter.badoffset.rate
-          delay: '60'
-          history: 1w
-          value_type: FLOAT
-          units: pps
-          description: 'pfCounterBadOffset — malformed packets with bad offset per second.'
-          preprocessing:
-            - type: CHANGE_PER_SECOND
-              parameters:
-                - ''
-          tags:
-            - tag: component
-              value: firewall
-          triggers:
-            - uuid: f1e5b0ba99e84edf9f1ddb1e205d33a2
-              expression: 'avg(/pfSense by SNMP/pf.counter.badoffset.rate,5m)>0'
-              name: 'pfSense: Malformed packets detected (bad offset)'
-              priority: WARNING
-              description: 'pf is receiving malformed packets with bad offset. May indicate network issues or a scan/attack.'
-              tags:
-                - tag: scope
-                  value: security
-        - uuid: 32cc1a5961fe46bbaade632536458388
-          name: 'pf: Fragmented packets rate'
-          type: SNMP_AGENT
-          snmp_oid: 'get[1.3.6.1.4.1.12325.1.200.1.2.3.0]'
-          key: pf.counter.fragment.rate
-          delay: '60'
-          history: 1w
-          value_type: FLOAT
-          units: pps
-          description: 'pfCounterFragment — fragmented packets per second processed by pf.'
-          preprocessing:
-            - type: CHANGE_PER_SECOND
-              parameters:
-                - ''
-          tags:
-            - tag: component
-              value: firewall
-        - uuid: d6501a8fe47b4a2ab33256997a47a563
-          name: 'pf: Rule-matched packets rate'
-          type: SNMP_AGENT
-          snmp_oid: 'get[1.3.6.1.4.1.12325.1.200.1.2.1.0]'
-          key: pf.counter.match.rate
-          delay: '60'
-          history: 1w
-          value_type: FLOAT
-          units: pps
-          description: 'pfCounterMatch — packets per second that matched any pf rule.'
-          preprocessing:
-            - type: CHANGE_PER_SECOND
-              parameters:
-                - ''
-          tags:
-            - tag: component
-              value: firewall
-        - uuid: 088fe790210e4d29b646a897040533ba
-          name: 'pf: Memory drops'
-          type: SNMP_AGENT
-          snmp_oid: 'get[1.3.6.1.4.1.12325.1.200.1.2.6.0]'
-          key: pf.counter.memdrop.rate
-          delay: '60'
-          history: 1w
-          value_type: FLOAT
-          units: pps
-          description: 'pfCounterMemDrop — packets dropped per second due to memory limits.'
-          preprocessing:
-            - type: CHANGE_PER_SECOND
-              parameters:
-                - ''
-          tags:
-            - tag: component
-              value: firewall
-          triggers:
-            - uuid: 877b9d1d4ce34459821dff33b31c7b94
-              expression: 'min(/pfSense by SNMP/pf.counter.memdrop.rate,5m)>0'
-              name: 'pfSense: pf dropping packets due to memory limits'
-              opdata: 'Rate: {ITEM.LASTVALUE1}'
-              priority: HIGH
-              description: 'pf is discarding packets because memory limits are reached. Check state table size and system RAM.'
-              tags:
-                - tag: scope
-                  value: capacity
-        - uuid: f84dc194ea2e43a194ac43e1a2c81324
-          name: 'pf: Normalized packets rate'
-          type: SNMP_AGENT
-          snmp_oid: 'get[1.3.6.1.4.1.12325.1.200.1.2.5.0]'
-          key: pf.counter.normalize.rate
-          delay: '60'
-          history: 1w
-          value_type: FLOAT
-          units: pps
-          description: 'pfCounterNormalize — packets normalized (scrubbed) per second by pf.'
-          preprocessing:
-            - type: CHANGE_PER_SECOND
-              parameters:
-                - ''
-          tags:
-            - tag: component
-              value: firewall
-        - uuid: 2b6c0b3178684396b42fc71330272dc4
-          name: 'pf: Short packets rate'
-          type: SNMP_AGENT
-          snmp_oid: 'get[1.3.6.1.4.1.12325.1.200.1.2.4.0]'
-          key: pf.counter.short.rate
-          delay: '60'
-          history: 1w
-          value_type: FLOAT
-          units: pps
-          description: 'pfCounterShort — packets too short for their IP header per second.'
-          preprocessing:
-            - type: CHANGE_PER_SECOND
-              parameters:
-                - ''
-          tags:
-            - tag: component
-              value: firewall
-        - uuid: 34dd507b093f465e8889d7b3516d4214
-          name: 'pf: IPv4 inbound packets dropped'
-          type: SNMP_AGENT
-          snmp_oid: 'get[1.3.6.1.4.1.12325.1.200.1.7.5.0]'
-          key: pf.log.ip4.in.drop.rate
-          delay: '60'
-          history: 1w
-          value_type: FLOAT
-          units: pps
-          description: 'pfLogInterfaceIp4PktsInDrop — IPv4 inbound packets dropped by pf rules per second.'
-          preprocessing:
-            - type: CHANGE_PER_SECOND
-              parameters:
-                - ''
-          tags:
-            - tag: component
-              value: firewall
-          triggers:
-            - uuid: 69d43a58cb214979a220200a9f3c6bf7
-              expression: 'avg(/pfSense by SNMP/pf.log.ip4.in.drop.rate,5m)>100'
-              name: 'pfSense: High inbound packet drop rate'
-              opdata: 'Dropped/s: {ITEM.LASTVALUE1}'
-              priority: WARNING
-              description: 'pf is dropping more than 100 packets/s inbound. Possible DDoS or misconfigured rule.'
-              tags:
-                - tag: scope
-                  value: security
-        - uuid: 05bea1c260b340b09e2636e3a04353c4
-          name: 'pf: IPv4 inbound packets passed'
-          type: SNMP_AGENT
-          snmp_oid: 'get[1.3.6.1.4.1.12325.1.200.1.7.4.0]'
-          key: pf.log.ip4.in.pass.rate
-          delay: '60'
-          history: 1w
-          value_type: FLOAT
-          units: pps
-          description: 'pfLogInterfaceIp4PktsInPass — IPv4 inbound packets passed by pf rules per second.'
-          preprocessing:
-            - type: CHANGE_PER_SECOND
-              parameters:
-                - ''
-          tags:
-            - tag: component
-              value: firewall
-        - uuid: 4d6e284c25214ec8901ef62da7803de1
-          name: 'pf: IPv4 outbound packets dropped'
-          type: SNMP_AGENT
-          snmp_oid: 'get[1.3.6.1.4.1.12325.1.200.1.7.7.0]'
-          key: pf.log.ip4.out.drop.rate
-          delay: '60'
-          history: 1w
-          value_type: FLOAT
-          units: pps
-          description: 'pfLogInterfaceIp4PktsOutDrop — IPv4 outbound packets dropped by pf rules per second.'
-          preprocessing:
-            - type: CHANGE_PER_SECOND
-              parameters:
-                - ''
-          tags:
-            - tag: component
-              value: firewall
-        - uuid: 414b6530d50a4d7aad53a707d5ca0c54
-          name: 'pf: IPv4 outbound packets passed'
-          type: SNMP_AGENT
-          snmp_oid: 'get[1.3.6.1.4.1.12325.1.200.1.7.6.0]'
-          key: pf.log.ip4.out.pass.rate
-          delay: '60'
-          history: 1w
-          value_type: FLOAT
-          units: pps
-          description: 'pfLogInterfaceIp4PktsOutPass — IPv4 outbound packets passed by pf rules per second.'
-          preprocessing:
-            - type: CHANGE_PER_SECOND
-              parameters:
-                - ''
-          tags:
-            - tag: component
-              value: firewall
-        - uuid: 1084c7dc233c421ebd95f8a17140285e
-          name: 'pf: Firewall running'
-          type: SNMP_AGENT
-          snmp_oid: 'get[1.3.6.1.4.1.12325.1.200.1.1.1.0]'
-          key: pf.running
-          delay: '60'
-          history: 1w
-          description: 'pfRunning — whether the pf packet filter is active. 1=running, 2=stopped.'
-          valuemap:
-            name: 'pfSense pf status'
-          tags:
-            - tag: component
-              value: firewall
-          triggers:
-            - uuid: 2631ce49d77c43bca3614410ae1ea94d
-              expression: 'last(/pfSense by SNMP/pf.running)<>1'
-              name: 'pfSense: pf firewall is not running'
-              priority: DISASTER
-              description: 'The pf packet filter is stopped. Firewall protection is inactive.'
-              tags:
-                - tag: scope
-                  value: availability
-        - uuid: f4682debb07b4a3f99c0d1aa41a0ee04
-          name: 'pf: Source nodes'
-          type: SNMP_AGENT
-          snmp_oid: 'get[1.3.6.1.4.1.12325.1.200.1.4.1.0]'
-          key: pf.src.nodes
-          delay: '60'
-          history: 1w
-          description: 'pfSrcNodes — number of tracked source nodes (used for sticky-address and source-hash rules).'
-          tags:
-            - tag: component
-              value: firewall
-        - uuid: c4585f8501dd420b890059d7b079d924
-          name: 'pf: State table current entries'
-          type: SNMP_AGENT
-          snmp_oid: 'get[1.3.6.1.4.1.12325.1.200.1.3.1.0]'
-          key: pf.states.current
-          delay: '60'
-          history: 1w
-          description: 'pfStateCount — current number of entries in the pf state table.'
-          tags:
-            - tag: component
-              value: firewall
-        - uuid: a259f7599ea3436aaba24f0e8a10b71d
-          name: 'pf: New connections rate'
-          type: SNMP_AGENT
-          snmp_oid: 'get[1.3.6.1.4.1.12325.1.200.1.3.3.0]'
-          key: pf.states.inserts.rate
-          delay: '60'
-          history: 1w
-          value_type: FLOAT
-          units: cps
-          description: 'pfStateTableInserts — new states created per second (new connections).'
-          preprocessing:
-            - type: CHANGE_PER_SECOND
-              parameters:
-                - ''
-          tags:
-            - tag: component
-              value: firewall
-        - uuid: 27d35593a5c44a7ea80f6ea3a0f7fa98
-          name: 'pf: State table maximum entries'
-          type: SNMP_AGENT
-          snmp_oid: 'get[1.3.6.1.4.1.12325.1.200.1.5.1.0]'
-          key: pf.states.limit
-          delay: 1h
-          history: 1w
-          description: 'pfStateLimit — maximum allowed entries in the pf state table.'
-          preprocessing:
-            - type: DISCARD_UNCHANGED_HEARTBEAT
-              parameters:
-                - 6h
-          tags:
-            - tag: component
-              value: firewall
-        - uuid: 6941634c2909456bb17b3765558dd6f2
-          name: 'pf: Closed connections rate'
-          type: SNMP_AGENT
-          snmp_oid: 'get[1.3.6.1.4.1.12325.1.200.1.3.4.0]'
-          key: pf.states.removals.rate
-          delay: '60'
-          history: 1w
-          value_type: FLOAT
-          units: cps
-          description: 'pfStateTableRemovals — states removed per second (closed connections).'
-          preprocessing:
-            - type: CHANGE_PER_SECOND
-              parameters:
-                - ''
-          tags:
-            - tag: component
-              value: firewall
-        - uuid: 044ce380d6b3424a95c2f2a90c2e42ce
-          name: 'pf: State table utilization'
-          type: CALCULATED
-          key: pf.states.util
-          delay: '60'
-          history: 1w
-          value_type: FLOAT
-          units: '%'
-          params: 'last(/{HOST.HOST}/pf.states.current) / last(/{HOST.HOST}/pf.states.limit) * 100'
-          description: 'Calculated percentage of pf state table in use.'
-          tags:
-            - tag: component
-              value: firewall
-          triggers:
-            - uuid: 4ee21df965934061b5cdd3c7562b3051
-              expression: 'last(/pfSense by SNMP/pf.states.util)>{$PF.STATE.UTIL.CRIT}'
-              name: 'pfSense: pf state table critically full'
-              opdata: 'Used: {ITEM.LASTVALUE1}'
-              priority: HIGH
-              description: 'pf state table utilization exceeds {$PF.STATE.UTIL.CRIT}%. New connections may be dropped.'
-              tags:
-                - tag: scope
-                  value: capacity
-            - uuid: 148af7a79b994f1daf1fbeab59a5cbf2
-              expression: 'last(/pfSense by SNMP/pf.states.util)>{$PF.STATE.UTIL.WARN}'
-              name: 'pfSense: pf state table high utilization'
-              opdata: 'Used: {ITEM.LASTVALUE1}'
-              priority: AVERAGE
-              dependencies:
-                - name: 'pfSense: pf state table critically full'
-                  expression: 'last(/pfSense by SNMP/pf.states.util)>{$PF.STATE.UTIL.CRIT}'
-              tags:
-                - tag: scope
-                  value: capacity
-        - uuid: 5111b5c8245e4b4194370a2424a779d2
-          name: 'System version (installed)'
-          type: SNMP_AGENT
-          snmp_oid: 'get[1.3.6.1.2.1.1.1.0]'
-          key: pfsense.version
-          delay: 1h
-          history: 1w
-          value_type: CHAR
-          trends: '0'
-          description: 'pfSense version extracted from sysDescr (1.3.6.1.2.1.1.1.0), e.g. "2.8.1".'
-          preprocessing:
-            - type: REGEX
-              parameters:
-                - '(\d+\.\d+\.\d+)-\w*RELEASE'
-                - \1
-            - type: DISCARD_UNCHANGED_HEARTBEAT
-              parameters:
-                - 1d
-          tags:
-            - tag: component
-              value: system
-        - uuid: 49461e7a69c343f79a6fba65b24bb911
-          name: 'System version (available)'
-          type: HTTP_AGENT
-          key: pfsense.version.available
-          delay: 1d
-          history: 1w
-          value_type: CHAR
-          trends: '0'
-          description: 'Latest pfSense CE release version from docs.netgate.com/pfsense/en/latest/releases/. Checks daily.'
-          preprocessing:
-            - type: REGEX
-              parameters:
-                - (2\.\d+\.\d+)
-                - \1
-            - type: DISCARD_UNCHANGED_HEARTBEAT
-              parameters:
-                - 7d
-          url: 'https://docs.netgate.com/pfsense/en/latest/releases/index.html'
-          tags:
-            - tag: component
-              value: system
-        - uuid: 2941a07e17054a208af8c8f5c0e22cbf
-          name: 'System contact'
-          type: SNMP_AGENT
-          snmp_oid: 'get[1.3.6.1.2.1.1.4.0]'
-          key: system.contact
-          delay: 1h
-          history: 1w
-          value_type: CHAR
-          trends: '0'
-          description: 'sysContact — administrator contact info.'
-          preprocessing:
-            - type: DISCARD_UNCHANGED_HEARTBEAT
-              parameters:
-                - 1d
-          tags:
-            - tag: component
-              value: system
-        - uuid: f9834d2208ed45df9282fb546f9cd2dc
-          name: 'CPU utilization'
-          type: SNMP_AGENT
-          snmp_oid: 'get[1.3.6.1.4.1.2021.11.11.0]'
-          key: system.cpu.util
-          delay: '60'
-          history: 1w
-          value_type: FLOAT
-          units: '%'
-          description: 'ssCpuIdle (UCD-SNMP) — aggregate CPU idle percentage across all cores, converted to utilization (100 - idle).'
-          preprocessing:
-            - type: JAVASCRIPT
-              parameters:
-                - 'return 100 - value;'
-          tags:
-            - tag: component
-              value: cpu
-          triggers:
-            - uuid: acc7e013012449cd9ff951a125ee1a4c
-              expression: 'min(/pfSense by SNMP/system.cpu.util,5m)>{$CPU.UTIL.CRIT}'
-              name: 'pfSense: CPU utilization is critically high'
-              opdata: 'CPU: {ITEM.LASTVALUE1}'
-              priority: HIGH
-              description: 'CPU utilization has been above {$CPU.UTIL.CRIT}% for 5 minutes.'
-              tags:
-                - tag: scope
-                  value: performance
-            - uuid: 4d4e7af9f2f74723b0acdbf2da4f1361
-              expression: 'min(/pfSense by SNMP/system.cpu.util,5m)>{$CPU.UTIL.WARN}'
-              name: 'pfSense: High CPU utilization'
-              opdata: 'CPU: {ITEM.LASTVALUE1}'
-              priority: WARNING
-              description: 'CPU utilization has been above {$CPU.UTIL.WARN}% for 5 minutes.'
-              dependencies:
-                - name: 'pfSense: CPU utilization is critically high'
-                  expression: 'min(/pfSense by SNMP/system.cpu.util,5m)>{$CPU.UTIL.CRIT}'
-              tags:
-                - tag: scope
-                  value: performance
-        - uuid: 5a131ae12b0644718aa722adbe092b9c
-          name: 'System description'
-          type: SNMP_AGENT
-          snmp_oid: 'get[1.3.6.1.2.1.1.1.0]'
-          key: system.descr
-          delay: 1h
-          history: 1w
-          value_type: CHAR
-          trends: '0'
-          description: 'sysDescr — OS version and hardware info.'
-          preprocessing:
-            - type: DISCARD_UNCHANGED_HEARTBEAT
-              parameters:
-                - 1d
-          tags:
-            - tag: component
-              value: system
-          triggers:
-            - uuid: 0fe15b7654ea44ecace6464589b2eb5a
-              expression: 'last(/pfSense by SNMP/system.descr,#1)<>last(/pfSense by SNMP/system.descr,#2)'
-              name: 'pfSense: System version has changed'
-              priority: INFO
-              description: 'sysDescr changed — a pfSense update may have been applied. Verify the new version.'
-              manual_close: 'YES'
-              tags:
-                - tag: scope
-                  value: notice
-        - uuid: 1def021a4c9c43aaacb9a00cfb194334
-          name: 'System hostname'
-          type: SNMP_AGENT
-          snmp_oid: 'get[1.3.6.1.2.1.1.5.0]'
-          key: system.hostname
-          delay: 1h
-          history: 1w
-          value_type: CHAR
-          trends: '0'
-          description: 'sysName — configured hostname.'
-          preprocessing:
-            - type: DISCARD_UNCHANGED_HEARTBEAT
-              parameters:
-                - 1d
-          tags:
-            - tag: component
-              value: system
-        - uuid: 51a5c127fe7c4c3aa0b34d09c30070f1
-          name: 'IP forwarding'
-          type: SNMP_AGENT
-          snmp_oid: 'get[1.3.6.1.2.1.4.1.0]'
-          key: system.ipforward
-          delay: '60'
-          history: 1w
-          description: 'ipForwarding (MIB-II) — whether this system is acting as an IP router. 1=forwarding, 2=notForwarding.'
-          valuemap:
-            name: 'pfSense IP forwarding'
-          preprocessing:
-            - type: DISCARD_UNCHANGED_HEARTBEAT
-              parameters:
-                - 6h
-          tags:
-            - tag: component
-              value: system
-          triggers:
-            - uuid: f6a22c68427748d191becd3081a2af59
-              expression: 'last(/pfSense by SNMP/system.ipforward)<>1'
-              name: 'pfSense: IP forwarding is disabled'
-              priority: DISASTER
-              description: 'IP forwarding (routing) is not enabled. pfSense cannot forward packets between interfaces.'
-              manual_close: 'YES'
-              tags:
-                - tag: scope
-                  value: availability
-        - uuid: d1b0e0be552d4b52b8d69fb1088ddf23
-          name: 'System load average (1 min)'
-          type: SNMP_AGENT
-          snmp_oid: 'get[1.3.6.1.4.1.2021.10.1.5.1]'
-          key: system.load.avg1
-          delay: '60'
-          history: 1w
-          value_type: FLOAT
-          description: 'laLoadInt — 1-minute load average × 100. Divided by 100 to get actual value.'
-          preprocessing:
-            - type: MULTIPLIER
-              parameters:
-                - '0.01'
-          tags:
-            - tag: component
-              value: cpu
-        - uuid: 49d09c10f81e440b9d1fca77e59c9fc6
-          name: 'System load average (5 min)'
-          type: SNMP_AGENT
-          snmp_oid: 'get[1.3.6.1.4.1.2021.10.1.5.2]'
-          key: system.load.avg5
-          delay: '60'
-          history: 1w
-          value_type: FLOAT
-          description: 'laLoadInt — 5-minute load average × 100. Divided by 100 to get actual value.'
-          preprocessing:
-            - type: MULTIPLIER
-              parameters:
-                - '0.01'
-          tags:
-            - tag: component
-              value: cpu
-          triggers:
-            - uuid: 407c1bdf2e064dd0ae1a45994e16ee60
-              expression: 'avg(/pfSense by SNMP/system.load.avg5,15m)>{$LOAD.AVG.WARN}'
-              name: 'pfSense: High system load average'
-              priority: WARNING
-              description: '5-minute load average has been above {$LOAD.AVG.WARN} for 15 minutes.'
-              tags:
-                - tag: scope
-                  value: performance
-        - uuid: 8c09db290ebe4f0a8026cd3fb70b7f56
-          name: 'System load average (15 min)'
-          type: SNMP_AGENT
-          snmp_oid: 'get[1.3.6.1.4.1.2021.10.1.5.3]'
-          key: system.load.avg15
-          delay: '60'
-          history: 1w
-          value_type: FLOAT
-          description: 'laLoadInt — 15-minute load average × 100. Divided by 100 to get actual value.'
-          preprocessing:
-            - type: MULTIPLIER
-              parameters:
-                - '0.01'
-          tags:
-            - tag: component
-              value: cpu
-        - uuid: 9b5c84159a1e44cbaa5cad0b21a6edce
-          name: 'System location'
-          type: SNMP_AGENT
-          snmp_oid: 'get[1.3.6.1.2.1.1.6.0]'
-          key: system.location
-          delay: 1h
-          history: 1w
-          value_type: CHAR
-          trends: '0'
-          description: 'sysLocation — configured physical location.'
-          preprocessing:
-            - type: DISCARD_UNCHANGED_HEARTBEAT
-              parameters:
-                - 1d
-          tags:
-            - tag: component
-              value: system
-        - uuid: ea57ba79420c42c7ac0ea91685d4d0c4
-          name: 'Running processes'
-          type: SNMP_AGENT
-          snmp_oid: 'get[1.3.6.1.2.1.25.1.6.0]'
-          key: system.processes.num
-          delay: '60'
-          history: 1w
-          description: 'hrSystemProcesses — number of running processes.'
-          tags:
-            - tag: component
-              value: system
-        - uuid: 29c97f2aa0d04c02aaa61ddcd6004fe9
-          name: 'System uptime'
-          type: SNMP_AGENT
-          snmp_oid: 'get[1.3.6.1.2.1.1.3.0]'
-          key: system.uptime
-          delay: '60'
-          history: 1w
-          value_type: FLOAT
-          units: uptime
-          description: 'sysUpTime — time since last reboot (hundredths of seconds, converted to seconds).'
-          preprocessing:
-            - type: MULTIPLIER
-              parameters:
-                - '0.01'
-          tags:
-            - tag: component
-              value: system
-          triggers:
-            - uuid: 6ed3b52884f54e4d95b965da54d77bc8
-              expression: 'last(/pfSense by SNMP/system.uptime)<600'
-              name: 'pfSense: Device has been restarted'
-              priority: WARNING
-              description: 'Uptime is less than 10 minutes — device recently rebooted.'
-              manual_close: 'YES'
-              tags:
-                - tag: scope
-                  value: notice
-        - uuid: d82fcce9cd4749ac8ec44eb1f7737189
-          name: 'Logged-in users'
-          type: SNMP_AGENT
-          snmp_oid: 'get[1.3.6.1.2.1.25.1.5.0]'
-          key: system.users.num
-          delay: '60'
-          history: 1w
-          description: 'hrSystemNumUsers — number of users currently logged in.'
-          tags:
-            - tag: component
-              value: system
-          triggers:
-            - uuid: cc95f7c7a46142cd9fc5eb52e6ade7f2
-              expression: 'last(/pfSense by SNMP/system.users.num)>{$SYSTEM.USERS.MAX}'
-              name: 'pfSense: User logged in'
-              opdata: 'Users: {ITEM.LASTVALUE1}'
-              priority: WARNING
-              description: 'A user is logged in to the pfSense system. Verify this is expected.'
-              manual_close: 'YES'
-              tags:
-                - tag: scope
-                  value: security
-        - uuid: 4ef65866f7fc495c8aebf2b65b2d98af
-          name: 'TCP: Connection attempt failures rate'
-          type: SNMP_AGENT
-          snmp_oid: 'get[1.3.6.1.2.1.6.7.0]'
-          key: tcp.attempt.fails.rate
-          delay: '60'
-          history: 1w
-          value_type: FLOAT
-          units: ps
-          description: 'tcpAttemptFails — failed TCP connection attempts per second. High values may indicate a port scan or SYN flood.'
-          preprocessing:
-            - type: CHANGE_PER_SECOND
-              parameters:
-                - ''
-          tags:
-            - tag: component
-              value: network
-          triggers:
-            - uuid: 417505e936594ec79a89f2f73076b112
-              expression: 'avg(/pfSense by SNMP/tcp.attempt.fails.rate,5m)>50'
-              name: 'pfSense: High TCP connection failure rate'
-              opdata: 'Rate: {ITEM.LASTVALUE1}/s'
-              priority: WARNING
-              description: 'TCP connection attempt failure rate is high. May indicate a port scan or SYN flood attack.'
-              tags:
-                - tag: scope
-                  value: security
-        - uuid: 838f2472b66f4d9ba0ce1e8023c92d67
-          name: 'TCP: Current established connections'
-          type: SNMP_AGENT
-          snmp_oid: 'get[1.3.6.1.2.1.6.9.0]'
-          key: tcp.curr.estab
-          delay: '60'
-          history: 1w
-          description: 'tcpCurrEstab — number of TCP connections currently in ESTABLISHED or CLOSE_WAIT state.'
-          tags:
-            - tag: component
-              value: network
-          triggers:
-            - uuid: c17861ab52b64c44958e3e710f9bff11
-              expression: 'last(/pfSense by SNMP/tcp.curr.estab)>{$TCP.ESTAB.MAX}'
-              name: 'pfSense: High number of TCP established connections'
-              opdata: 'Current: {ITEM.LASTVALUE1}'
-              priority: WARNING
-              description: 'Number of established TCP connections exceeds {$TCP.ESTAB.MAX}.'
-              tags:
-                - tag: scope
-                  value: capacity
-        - uuid: b61ca7308d9a49a7a285cdb7ed308346
-          name: 'TCP: Established connection resets rate'
-          type: SNMP_AGENT
-          snmp_oid: 'get[1.3.6.1.2.1.6.8.0]'
-          key: tcp.estab.resets.rate
-          delay: '60'
-          history: 1w
-          value_type: FLOAT
-          units: ps
-          description: 'tcpEstabResets — established TCP connections reset per second.'
-          preprocessing:
-            - type: CHANGE_PER_SECOND
-              parameters:
-                - ''
-          tags:
-            - tag: component
-              value: network
-        - uuid: da1359a6eecb42928d83165b10720f4c
-          name: 'TCP: Segment receive rate'
-          type: SNMP_AGENT
-          snmp_oid: 'get[1.3.6.1.2.1.6.10.0]'
-          key: tcp.in.segs.rate
-          delay: '60'
-          history: 1w
-          value_type: FLOAT
-          units: ps
-          description: 'tcpInSegs — TCP segments received per second.'
-          preprocessing:
-            - type: CHANGE_PER_SECOND
-              parameters:
-                - ''
-          tags:
-            - tag: component
-              value: network
-        - uuid: 1c5a3afb885b45bb911d4ef0e39c23a5
-          name: 'TCP: Segment send rate'
-          type: SNMP_AGENT
-          snmp_oid: 'get[1.3.6.1.2.1.6.11.0]'
-          key: tcp.out.segs.rate
-          delay: '60'
-          history: 1w
-          value_type: FLOAT
-          units: ps
-          description: 'tcpOutSegs — TCP segments sent per second.'
-          preprocessing:
-            - type: CHANGE_PER_SECOND
-              parameters:
-                - ''
-          tags:
-            - tag: component
-              value: network
-        - uuid: 6680a217013e4d0598c79670aafa1704
-          name: 'TCP: Retransmit rate'
-          type: SNMP_AGENT
-          snmp_oid: 'get[1.3.6.1.2.1.6.12.0]'
-          key: tcp.retrans.rate
-          delay: '60'
-          history: 1w
-          value_type: FLOAT
-          units: ps
-          description: 'tcpRetransSegs — TCP segments retransmitted per second. High values indicate network issues.'
-          preprocessing:
-            - type: CHANGE_PER_SECOND
-              parameters:
-                - ''
-          tags:
-            - tag: component
-              value: network
-          triggers:
-            - uuid: c4bc269ff63245a88ac42c0c7db76c11
-              expression: 'avg(/pfSense by SNMP/tcp.retrans.rate,5m)>10'
-              name: 'pfSense: High TCP retransmit rate'
-              opdata: 'Rate: {ITEM.LASTVALUE1}/s'
-              priority: WARNING
-              description: 'TCP retransmit rate is elevated. May indicate packet loss or network congestion.'
-              tags:
-                - tag: scope
-                  value: performance
-        - uuid: 8c4fd508b8eb4741b495dc0523d8450f
-          name: 'UDP: Input errors rate'
-          type: SNMP_AGENT
-          snmp_oid: 'get[1.3.6.1.2.1.7.3.0]'
-          key: udp.in.errors.rate
-          delay: '60'
-          history: 1w
-          value_type: FLOAT
-          units: ps
-          description: 'udpInErrors — UDP datagrams that could not be delivered per second.'
-          preprocessing:
-            - type: CHANGE_PER_SECOND
-              parameters:
-                - ''
-          tags:
-            - tag: component
-              value: network
-          triggers:
-            - uuid: 1e0e681ed15e434688d065d65fb7e5bf
-              expression: 'avg(/pfSense by SNMP/udp.in.errors.rate,5m)>10'
-              name: 'pfSense: Elevated UDP input error rate'
-              opdata: 'Rate: {ITEM.LASTVALUE1}/s'
-              priority: WARNING
-              description: 'UDP input error rate is elevated. Packets are being dropped.'
-              tags:
-                - tag: scope
-                  value: performance
-        - uuid: f3bcc18955ca44f6adac32eafb7e9262
-          name: 'Memory available'
-          type: SNMP_AGENT
-          snmp_oid: 'get[1.3.6.1.4.1.2021.4.6.0]'
-          key: vm.memory.available
-          delay: '60'
-          history: 1w
-          units: B
-          description: 'memAvailReal — available real memory in KB, converted to bytes. Includes free memory that can be used immediately.'
-          preprocessing:
-            - type: MULTIPLIER
-              parameters:
-                - '1024'
-          tags:
-            - tag: component
-              value: memory
-        - uuid: 2515f87854374ac2a156095b69c80943
-          name: 'Memory buffers'
-          type: SNMP_AGENT
-          snmp_oid: 'get[1.3.6.1.4.1.2021.4.14.0]'
-          key: vm.memory.buffers
-          delay: '60'
-          history: 1w
-          units: B
-          description: 'memBuffer — buffer memory in KB, converted to bytes.'
-          preprocessing:
-            - type: MULTIPLIER
-              parameters:
-                - '1024'
-          tags:
-            - tag: component
-              value: memory
-        - uuid: a08b42a544df408387236a2f03df4367
-          name: 'Memory cached'
-          type: SNMP_AGENT
-          snmp_oid: 'get[1.3.6.1.4.1.2021.4.15.0]'
-          key: vm.memory.cached
-          delay: '60'
-          history: 1w
-          units: B
-          description: 'memCached — cached memory in KB, converted to bytes.'
-          preprocessing:
-            - type: MULTIPLIER
-              parameters:
-                - '1024'
-          tags:
-            - tag: component
-              value: memory
-        - uuid: 45924e7dd84e41bea8124f886e115997
-          name: 'Memory shared'
-          type: SNMP_AGENT
-          snmp_oid: 'get[1.3.6.1.4.1.2021.4.13.0]'
-          key: vm.memory.shared
-          delay: '60'
-          history: 1w
-          units: B
-          description: 'memShared (UCD-SNMP) — shared memory in KB, converted to bytes.'
-          preprocessing:
-            - type: MULTIPLIER
-              parameters:
-                - '1024'
-          tags:
-            - tag: component
-              value: memory
-        - uuid: 90ac93d6164e45e08fb63ab4efb407b5
-          name: 'Swap free'
-          type: SNMP_AGENT
-          snmp_oid: 'get[1.3.6.1.4.1.2021.4.4.0]'
-          key: vm.memory.swap.free
-          delay: '60'
-          history: 1w
-          units: B
-          description: 'memAvailSwap (UCD-SNMP) — available swap space in KB, converted to bytes.'
-          preprocessing:
-            - type: MULTIPLIER
-              parameters:
-                - '1024'
-          tags:
-            - tag: component
-              value: memory
-        - uuid: 99ed881f74674787998c1245fbdf60ed
-          name: 'Swap total'
-          type: SNMP_AGENT
-          snmp_oid: 'get[1.3.6.1.4.1.2021.4.3.0]'
-          key: vm.memory.swap.total
-          delay: 1h
-          history: 1w
-          units: B
-          description: 'memTotalSwap (UCD-SNMP) — total configured swap space in KB, converted to bytes.'
-          preprocessing:
-            - type: MULTIPLIER
-              parameters:
-                - '1024'
-            - type: DISCARD_UNCHANGED_HEARTBEAT
-              parameters:
-                - 6h
-          tags:
-            - tag: component
-              value: memory
-        - uuid: 3a42a26b2b2843979499b16d003ef6d7
-          name: 'Swap utilization'
-          type: CALCULATED
-          key: vm.memory.swap.util
-          delay: '60'
-          history: 1w
-          value_type: FLOAT
-          units: '%'
-          params: '(last(/{HOST.HOST}/vm.memory.swap.total) - last(/{HOST.HOST}/vm.memory.swap.free)) / last(/{HOST.HOST}/vm.memory.swap.total) * 100'
-          description: 'Swap space utilization calculated from memTotalSwap and memAvailSwap.'
-          tags:
-            - tag: component
-              value: memory
-          triggers:
-            - uuid: 3e5cbf5a1e6c42b490e2bf6b2f161725
-              expression: 'min(/pfSense by SNMP/vm.memory.swap.util,5m)>{$MEMORY.SWAP.WARN}'
-              name: 'pfSense: High swap utilization'
-              opdata: 'Swap used: {ITEM.LASTVALUE1}'
-              priority: WARNING
-              description: 'Swap utilization has been above {$MEMORY.SWAP.WARN}% for 5 minutes. System is under memory pressure.'
-              tags:
-                - tag: scope
-                  value: capacity
-        - uuid: 14e1d1d55d964a61af59a483df0b4c21
-          name: 'Total memory'
-          type: SNMP_AGENT
-          snmp_oid: 'get[1.3.6.1.2.1.25.2.2.0]'
-          key: vm.memory.total
-          delay: 1h
-          history: 1w
-          units: B
-          description: 'hrMemorySize — total installed RAM in KB, converted to bytes.'
-          preprocessing:
-            - type: MULTIPLIER
-              parameters:
-                - '1024'
-            - type: DISCARD_UNCHANGED_HEARTBEAT
-              parameters:
-                - 6h
-          tags:
-            - tag: component
-              value: memory
-        - uuid: 127ff0190e87462089a3f05c9995c1db
-          name: 'Memory utilization'
-          type: CALCULATED
-          key: vm.memory.util
-          delay: '60'
-          history: 1w
-          value_type: FLOAT
-          units: '%'
-          params: '(last(/{HOST.HOST}/vm.memory.total) - last(/{HOST.HOST}/vm.memory.available)) / last(/{HOST.HOST}/vm.memory.total) * 100'
-          description: 'Memory utilization calculated from UCD-SNMP memTotalReal and memAvailReal.'
-          tags:
-            - tag: component
-              value: memory
-          triggers:
-            - uuid: f02782e78037493f8a3ceee9a8ea1800
-              expression: 'min(/pfSense by SNMP/vm.memory.util,5m)>{$MEMORY.UTIL.MAX}'
-              name: 'pfSense: High memory utilization'
-              priority: WARNING
-              description: 'Memory utilization has been above {$MEMORY.UTIL.MAX}% for 5 minutes.'
-              tags:
-                - tag: scope
-                  value: capacity
-      discovery_rules:
-        - uuid: 3a6fcbbc57db472b99c3acb2d18d8d1f
-          name: 'CPU cores discovery'
-          type: SNMP_AGENT
-          snmp_oid: 'discovery[{#SNMPVALUE},1.3.6.1.2.1.25.3.3.1.2]'
-          key: cpu.discovery
-          delay: 1h
-          description: 'Discovers CPU cores via hrProcessorLoad table.'
-          item_prototypes:
-            - uuid: 8c8e799838524933855d858045c16c8b
-              name: 'CPU core {#SNMPINDEX}: Utilization'
-              type: SNMP_AGENT
-              snmp_oid: 'get[1.3.6.1.2.1.25.3.3.1.2.{#SNMPINDEX}]'
-              key: 'system.cpu.util[{#SNMPINDEX}]'
-              delay: '60'
-              history: 1w
-              units: '%'
-              description: 'hrProcessorLoad — CPU utilization for this core (%).'
-              tags:
-                - tag: component
-                  value: cpu
-                - tag: core
-                  value: '{#SNMPINDEX}'
-              trigger_prototypes:
-                - uuid: 3a75d7215e3c4d1c8ecb8d50852f1f08
-                  expression: 'avg(/pfSense by SNMP/system.cpu.util[{#SNMPINDEX}],5m)>{$CPU.UTIL.CRIT} and {$ENABLE_CPU_CORE_ALERT}=1'
-                  name: 'CPU core {#SNMPINDEX}: High CPU utilization'
-                  opdata: 'Current: {ITEM.LASTVALUE1}'
-                  priority: HIGH
-                  description: 'CPU utilization on core {#SNMPINDEX} exceeds {$CPU.UTIL.CRIT}% for 5 minutes.'
-                  tags:
-                    - tag: scope
-                      value: performance
-          graph_prototypes:
-            - uuid: d165c64ebdd14327964402bb8f63fc8f
-              name: 'CPU core {#SNMPINDEX}: Utilization'
-              graph_items:
-                - color: FF5722
-                  item:
-                    host: 'pfSense by SNMP'
-                    key: 'system.cpu.util[{#SNMPINDEX}]'
-        - uuid: c09a49027e4d4f04a7e4e5a5f91122cf
-          name: 'Disk I/O discovery'
-          type: SNMP_AGENT
-          snmp_oid: 'discovery[{#SNMPVALUE},1.3.6.1.4.1.2021.13.15.1.1.2]'
-          key: disk.io.discovery
-          delay: 1h
-          filter:
-            evaltype: AND
-            conditions:
-              - macro: '{#SNMPVALUE}'
-                value: '{$DISK.IO.DEVICE.NOT_MATCHES}'
-                operator: NOT_MATCHES_REGEX
-                formulaid: A
-          description: 'Discovers physical disk devices via UCD-SNMP diskIOTable. Passthrough devices (pass*) are excluded.'
-          item_prototypes:
-            - uuid: 1168ee8506fd419e9adaff9b20963344
-              name: 'Disk {#SNMPVALUE}: Read throughput'
-              type: SNMP_AGENT
-              snmp_oid: 'get[1.3.6.1.4.1.2021.13.15.1.1.12.{#SNMPINDEX}]'
-              key: 'disk.io.read[{#SNMPVALUE}]'
-              delay: '60'
-              history: 1w
-              value_type: FLOAT
-              units: Bps
-              description: 'diskIONRead — bytes read per second from this disk device (Counter64).'
-              preprocessing:
-                - type: CHANGE_PER_SECOND
-                  parameters:
-                    - ''
-              tags:
-                - tag: component
-                  value: storage
-            - uuid: c4c972b0cb0d4199be4e1875cbdb5509
-              name: 'Disk {#SNMPVALUE}: Write throughput'
-              type: SNMP_AGENT
-              snmp_oid: 'get[1.3.6.1.4.1.2021.13.15.1.1.13.{#SNMPINDEX}]'
-              key: 'disk.io.write[{#SNMPVALUE}]'
-              delay: '60'
-              history: 1w
-              value_type: FLOAT
-              units: Bps
-              description: 'diskIONWritten — bytes written per second to this disk device (Counter64).'
-              preprocessing:
-                - type: CHANGE_PER_SECOND
-                  parameters:
-                    - ''
-              tags:
-                - tag: component
-                  value: storage
-          graph_prototypes:
-            - uuid: 7fa538fe3d554c60bbb80a09b715dd57
-              name: 'Disk {#SNMPVALUE}: I/O throughput'
-              graph_items:
-                - color: 1A7C11
-                  item:
-                    host: 'pfSense by SNMP'
-                    key: 'disk.io.read[{#SNMPVALUE}]'
-                - sortorder: '1'
-                  color: E53935
-                  item:
-                    host: 'pfSense by SNMP'
-                    key: 'disk.io.write[{#SNMPVALUE}]'
-        - uuid: 8c344831467241378fb53757dd10f5b1
-          name: 'Network interfaces discovery'
-          type: SNMP_AGENT
-          snmp_oid: 'discovery[{#SNMPVALUE},1.3.6.1.2.1.2.2.1.2]'
-          key: net.if.discovery
-          delay: 1h
-          filter:
-            evaltype: AND
-            conditions:
-              - macro: '{#SNMPVALUE}'
-                value: '{$NET.IF.IFNAME.MATCHES}'
-                formulaid: A
-              - macro: '{#SNMPVALUE}'
-                value: '{$NET.IF.IFNAME.NOT_MATCHES}'
-                operator: NOT_MATCHES_REGEX
-                formulaid: B
-          description: 'Discovers network interfaces via IF-MIB ifDescr walk. Excludes pflog, pfsync, enc, lo by default.'
-          item_prototypes:
-            - uuid: 77ad791b3a0449eea04f14fcabb3cf6d
-              name: 'Interface {#SNMPVALUE}: Admin status'
-              type: SNMP_AGENT
-              snmp_oid: 'get[1.3.6.1.2.1.2.2.1.7.{#SNMPINDEX}]'
-              key: 'net.if.admin.status[{#SNMPVALUE}]'
-              delay: '60'
-              history: 1w
-              description: 'ifAdminStatus — 1=up, 2=down, 3=testing.'
-              valuemap:
-                name: 'IF-MIB::ifAdminStatus'
-              tags:
-                - tag: component
-                  value: interface
-                - tag: interface
-                  value: '{#SNMPVALUE}'
-            - uuid: 0e2ba3ea993e46daa743ceb7a54acdcb
-              name: 'Interface {#SNMPVALUE}: Inbound errors'
-              type: SNMP_AGENT
-              snmp_oid: 'get[1.3.6.1.2.1.2.2.1.14.{#SNMPINDEX}]'
-              key: 'net.if.in.errors[{#SNMPVALUE}]'
-              delay: '60'
-              history: 1w
-              units: eps
-              description: 'ifInErrors — inbound packet errors per second.'
-              preprocessing:
-                - type: CHANGE_PER_SECOND
-                  parameters:
-                    - ''
-              tags:
-                - tag: component
-                  value: interface
-                - tag: interface
-                  value: '{#SNMPVALUE}'
-              trigger_prototypes:
-                - uuid: 0a84e0912907493bbb081666b53f54d5
-                  expression: 'min(/pfSense by SNMP/net.if.in.errors[{#SNMPVALUE}],5m)>{$IF.ERRORS.WARN} and {$ENABLE_IF_ERROR_ALERT:"{#SNMPVALUE}"}=1'
-                  name: 'Interface {#SNMPVALUE}: High inbound error rate'
-                  opdata: 'Errors/s: {ITEM.LASTVALUE1}'
-                  priority: WARNING
-                  tags:
-                    - tag: scope
-                      value: performance
-            - uuid: 0916206023f54d30abcd81ea8a19a2da
-              name: 'Interface {#SNMPVALUE}: Inbound traffic'
-              type: SNMP_AGENT
-              snmp_oid: 'get[1.3.6.1.2.1.31.1.1.1.6.{#SNMPINDEX}]'
-              key: 'net.if.in[{#SNMPVALUE}]'
-              delay: '60'
-              history: 1w
-              units: bps
-              description: 'ifHCInOctets — inbound octets (Counter64), converted to bits per second.'
-              preprocessing:
-                - type: CHANGE_PER_SECOND
-                  parameters:
-                    - ''
-                - type: MULTIPLIER
-                  parameters:
-                    - '8'
-              tags:
-                - tag: component
-                  value: interface
-                - tag: interface
-                  value: '{#SNMPVALUE}'
-            - uuid: 7df739182be740faa23d6290f7e668dc
-              name: 'Interface {#SNMPVALUE}: Operational status'
-              type: SNMP_AGENT
-              snmp_oid: 'get[1.3.6.1.2.1.2.2.1.8.{#SNMPINDEX}]'
-              key: 'net.if.oper.status[{#SNMPVALUE}]'
-              delay: '60'
-              history: 1w
-              description: 'ifOperStatus — 1=up, 2=down, 3=testing, 4=unknown, 5=dormant, 6=notPresent, 7=lowerLayerDown.'
-              valuemap:
-                name: 'IF-MIB::ifOperStatus'
-              tags:
-                - tag: component
-                  value: interface
-                - tag: interface
-                  value: '{#SNMPVALUE}'
-            - uuid: 63cac750415d4e8f9ba6109ff2da9f6b
-              name: 'Interface {#SNMPVALUE}: Outbound errors'
-              type: SNMP_AGENT
-              snmp_oid: 'get[1.3.6.1.2.1.2.2.1.20.{#SNMPINDEX}]'
-              key: 'net.if.out.errors[{#SNMPVALUE}]'
-              delay: '60'
-              history: 1w
-              units: eps
-              description: 'ifOutErrors — outbound packet errors per second.'
-              preprocessing:
-                - type: CHANGE_PER_SECOND
-                  parameters:
-                    - ''
-              tags:
-                - tag: component
-                  value: interface
-                - tag: interface
-                  value: '{#SNMPVALUE}'
-              trigger_prototypes:
-                - uuid: 87c7e5ad8e9c460d9f1465030772438c
-                  expression: 'min(/pfSense by SNMP/net.if.out.errors[{#SNMPVALUE}],5m)>{$IF.ERRORS.WARN} and {$ENABLE_IF_ERROR_ALERT:"{#SNMPVALUE}"}=1'
-                  name: 'Interface {#SNMPVALUE}: High outbound error rate'
-                  opdata: 'Errors/s: {ITEM.LASTVALUE1}'
-                  priority: WARNING
-                  tags:
-                    - tag: scope
-                      value: performance
-            - uuid: 73c02a87e8664db289c1b810beceed6f
-              name: 'Interface {#SNMPVALUE}: Outbound traffic'
-              type: SNMP_AGENT
-              snmp_oid: 'get[1.3.6.1.2.1.31.1.1.1.10.{#SNMPINDEX}]'
-              key: 'net.if.out[{#SNMPVALUE}]'
-              delay: '60'
-              history: 1w
-              units: bps
-              description: 'ifHCOutOctets — outbound octets (Counter64), converted to bits per second.'
-              preprocessing:
-                - type: CHANGE_PER_SECOND
-                  parameters:
-                    - ''
-                - type: MULTIPLIER
-                  parameters:
-                    - '8'
-              tags:
-                - tag: component
-                  value: interface
-                - tag: interface
-                  value: '{#SNMPVALUE}'
-            - uuid: 830b09bf60644aea90112080f342ad3f
-              name: 'Interface {#SNMPVALUE}: Speed'
-              type: SNMP_AGENT
-              snmp_oid: 'get[1.3.6.1.2.1.31.1.1.1.15.{#SNMPINDEX}]'
-              key: 'net.if.speed[{#SNMPVALUE}]'
-              delay: 5m
-              history: 1w
-              units: bps
-              description: 'ifHighSpeed — interface speed in Mbps, converted to bps.'
-              preprocessing:
-                - type: MULTIPLIER
-                  parameters:
-                    - '1000000'
-                - type: DISCARD_UNCHANGED_HEARTBEAT
-                  parameters:
-                    - 1h
-              tags:
-                - tag: component
-                  value: interface
-                - tag: interface
-                  value: '{#SNMPVALUE}'
-          trigger_prototypes:
-            - uuid: ff634a66c51d423b90d26cce291f8bfe
-              expression: 'avg(/pfSense by SNMP/net.if.in[{#SNMPVALUE}],15m)/last(/pfSense by SNMP/net.if.speed[{#SNMPVALUE}])*100>{$IF.UTIL.MAX} and last(/pfSense by SNMP/net.if.speed[{#SNMPVALUE}])>0 and {$ENABLE_IF_UTIL_ALERT:"{#SNMPVALUE}"}=1'
-              name: 'Interface {#SNMPVALUE}: High inbound utilization'
-              opdata: 'In: {ITEM.LASTVALUE1}'
-              priority: WARNING
-              description: 'Inbound bandwidth utilization on {#SNMPVALUE} exceeds {$IF.UTIL.MAX}% of line speed for 15 minutes.'
-              tags:
-                - tag: scope
-                  value: performance
-            - uuid: 9029883007c64a70a608eade949e099a
-              expression: 'avg(/pfSense by SNMP/net.if.out[{#SNMPVALUE}],15m)/last(/pfSense by SNMP/net.if.speed[{#SNMPVALUE}])*100>{$IF.UTIL.MAX} and last(/pfSense by SNMP/net.if.speed[{#SNMPVALUE}])>0 and {$ENABLE_IF_UTIL_ALERT:"{#SNMPVALUE}"}=1'
-              name: 'Interface {#SNMPVALUE}: High outbound utilization'
-              opdata: 'Out: {ITEM.LASTVALUE1}'
-              priority: WARNING
-              description: 'Outbound bandwidth utilization on {#SNMPVALUE} exceeds {$IF.UTIL.MAX}% of line speed for 15 minutes.'
-              tags:
-                - tag: scope
-                  value: performance
-            - uuid: 64a292bb55e3442183c5abca6ce95726
-              expression: 'last(/pfSense by SNMP/net.if.oper.status[{#SNMPVALUE}])<>1 and last(/pfSense by SNMP/net.if.admin.status[{#SNMPVALUE}])=1 and {$ENABLE_LINK_DOWN_ALERT:"{#SNMPVALUE}"}=1'
-              name: 'Interface {#SNMPVALUE}: Link down'
-              priority: AVERAGE
-              description: 'Interface is administratively up but operationally down.'
-              tags:
-                - tag: scope
-                  value: availability
-          graph_prototypes:
-            - uuid: a9bedf796f94412ba9a48d2a536708e2
-              name: 'Interface {#SNMPVALUE}: Traffic'
-              graph_items:
-                - color: 1A7C11
-                  item:
-                    host: 'pfSense by SNMP'
-                    key: 'net.if.in[{#SNMPVALUE}]'
-                - sortorder: '1'
-                  color: F63100
-                  item:
-                    host: 'pfSense by SNMP'
-                    key: 'net.if.out[{#SNMPVALUE}]'
-        - uuid: cc64e70771b04f31939e549ef5552268
-          name: 'pf interfaces discovery'
-          type: SNMP_AGENT
-          snmp_oid: 'discovery[{#SNMPVALUE},1.3.6.1.4.1.12325.1.200.1.8.2.1.2]'
-          key: pf.if.discovery
-          delay: 1h
-          description: |
-            Discovers pf-tracked interfaces via pfInterfacesIfDescr.
-            Shows per-interface passed and blocked byte/packet statistics.
-            Requires snmp_pf.so module.
-          item_prototypes:
-            - uuid: 6a89a4f9409d4386b9fc55b8e43bb49d
-              name: 'pf Interface {#SNMPVALUE}: IPv4 inbound bytes blocked'
-              type: SNMP_AGENT
-              snmp_oid: 'get[1.3.6.1.4.1.12325.1.200.1.8.2.1.8.{#SNMPINDEX}]'
-              key: 'pf.if.ip4.in.block.bytes[{#SNMPVALUE}]'
-              delay: '60'
-              history: 1w
-              units: bps
-              description: 'pfInterfacesIf4BytesInBlock — IPv4 bytes per second blocked inbound.'
-              preprocessing:
-                - type: CHANGE_PER_SECOND
-                  parameters:
-                    - ''
-                - type: MULTIPLIER
-                  parameters:
-                    - '8'
-              tags:
-                - tag: component
-                  value: firewall
-                - tag: interface
-                  value: '{#SNMPVALUE}'
-            - uuid: 07dd920cfda14ea289c549c673bef27f
-              name: 'pf Interface {#SNMPVALUE}: IPv4 inbound packets blocked'
-              type: SNMP_AGENT
-              snmp_oid: 'get[1.3.6.1.4.1.12325.1.200.1.8.2.1.12.{#SNMPINDEX}]'
-              key: 'pf.if.ip4.in.block.pkts[{#SNMPVALUE}]'
-              delay: '60'
-              history: 1w
-              units: pps
-              description: 'pfInterfacesIf4PktsInBlock — IPv4 packets per second blocked inbound.'
-              preprocessing:
-                - type: CHANGE_PER_SECOND
-                  parameters:
-                    - ''
-              tags:
-                - tag: component
-                  value: firewall
-                - tag: interface
-                  value: '{#SNMPVALUE}'
-              trigger_prototypes:
-                - uuid: 2b51f2c552804faf8bb7fc9746005c0e
-                  expression: 'avg(/pfSense by SNMP/pf.if.ip4.in.block.pkts[{#SNMPVALUE}],5m)>{$PF.IF.BLOCK.WARN} and {$ENABLE_PF_BLOCK_ALERT:"{#SNMPVALUE}"}=1'
-                  name: 'pf Interface {#SNMPVALUE}: High inbound block rate'
-                  opdata: 'Blocked/s: {ITEM.LASTVALUE1}'
-                  priority: WARNING
-                  description: 'pf is blocking more than {$PF.IF.BLOCK.WARN} packets/s inbound on {#SNMPVALUE}.'
-                  tags:
-                    - tag: scope
-                      value: security
-            - uuid: 0c38743451c04596ae778d07015aa2d6
-              name: 'pf Interface {#SNMPVALUE}: IPv4 inbound bytes passed'
-              type: SNMP_AGENT
-              snmp_oid: 'get[1.3.6.1.4.1.12325.1.200.1.8.2.1.7.{#SNMPINDEX}]'
-              key: 'pf.if.ip4.in.pass.bytes[{#SNMPVALUE}]'
-              delay: '60'
-              history: 1w
-              units: bps
-              description: 'pfInterfacesIf4BytesInPass — IPv4 bytes per second passed inbound.'
-              preprocessing:
-                - type: CHANGE_PER_SECOND
-                  parameters:
-                    - ''
-                - type: MULTIPLIER
-                  parameters:
-                    - '8'
-              tags:
-                - tag: component
-                  value: firewall
-                - tag: interface
-                  value: '{#SNMPVALUE}'
-            - uuid: 5476134e8b8540a99914793c4e40b09f
-              name: 'pf Interface {#SNMPVALUE}: IPv4 outbound bytes blocked'
-              type: SNMP_AGENT
-              snmp_oid: 'get[1.3.6.1.4.1.12325.1.200.1.8.2.1.10.{#SNMPINDEX}]'
-              key: 'pf.if.ip4.out.block.bytes[{#SNMPVALUE}]'
-              delay: '60'
-              history: 1w
-              units: bps
-              description: 'pfInterfacesIf4BytesOutBlock — IPv4 bytes per second blocked outbound.'
-              preprocessing:
-                - type: CHANGE_PER_SECOND
-                  parameters:
-                    - ''
-                - type: MULTIPLIER
-                  parameters:
-                    - '8'
-              tags:
-                - tag: component
-                  value: firewall
-                - tag: interface
-                  value: '{#SNMPVALUE}'
-            - uuid: ab954981fccd47088ec19a7f2c15e442
-              name: 'pf Interface {#SNMPVALUE}: IPv4 outbound packets blocked'
-              type: SNMP_AGENT
-              snmp_oid: 'get[1.3.6.1.4.1.12325.1.200.1.8.2.1.14.{#SNMPINDEX}]'
-              key: 'pf.if.ip4.out.block.pkts[{#SNMPVALUE}]'
-              delay: '60'
-              history: 1w
-              units: pps
-              description: 'pfInterfacesIf4PktsOutBlock — IPv4 packets per second blocked outbound.'
-              preprocessing:
-                - type: CHANGE_PER_SECOND
-                  parameters:
-                    - ''
-              tags:
-                - tag: component
-                  value: firewall
-                - tag: interface
-                  value: '{#SNMPVALUE}'
-              trigger_prototypes:
-                - uuid: 0495a3875fe1425284d738fa6906dd20
-                  expression: 'avg(/pfSense by SNMP/pf.if.ip4.out.block.pkts[{#SNMPVALUE}],5m)>{$PF.IF.BLOCK.WARN} and {$ENABLE_PF_BLOCK_ALERT:"{#SNMPVALUE}"}=1'
-                  name: 'pf Interface {#SNMPVALUE}: High outbound block rate'
-                  opdata: 'Blocked/s: {ITEM.LASTVALUE1}'
-                  priority: WARNING
-                  description: 'pf is blocking more than {$PF.IF.BLOCK.WARN} packets/s outbound on {#SNMPVALUE}.'
-                  tags:
-                    - tag: scope
-                      value: security
-            - uuid: 5de92b1ef37d4f7ca4facfc431e60a6e
-              name: 'pf Interface {#SNMPVALUE}: IPv4 outbound bytes passed'
-              type: SNMP_AGENT
-              snmp_oid: 'get[1.3.6.1.4.1.12325.1.200.1.8.2.1.9.{#SNMPINDEX}]'
-              key: 'pf.if.ip4.out.pass.bytes[{#SNMPVALUE}]'
-              delay: '60'
-              history: 1w
-              units: bps
-              description: 'pfInterfacesIf4BytesOutPass — IPv4 bytes per second passed outbound.'
-              preprocessing:
-                - type: CHANGE_PER_SECOND
-                  parameters:
-                    - ''
-                - type: MULTIPLIER
-                  parameters:
-                    - '8'
-              tags:
-                - tag: component
-                  value: firewall
-                - tag: interface
-                  value: '{#SNMPVALUE}'
-          graph_prototypes:
-            - uuid: 705ec0acdab24da791bec5971baa7ce7
-              name: 'pf Interface {#SNMPVALUE}: Passed vs Blocked (inbound)'
-              graph_items:
-                - color: 1A7C11
-                  item:
-                    host: 'pfSense by SNMP'
-                    key: 'pf.if.ip4.in.pass.bytes[{#SNMPVALUE}]'
-                - sortorder: '1'
-                  color: E53935
-                  item:
-                    host: 'pfSense by SNMP'
-                    key: 'pf.if.ip4.in.block.bytes[{#SNMPVALUE}]'
-            - uuid: 650a1bf08978439bbf2a140cb265ab8c
-              name: 'pf Interface {#SNMPVALUE}: Passed vs Blocked (outbound)'
-              graph_items:
-                - color: 1A7C11
-                  item:
-                    host: 'pfSense by SNMP'
-                    key: 'pf.if.ip4.out.pass.bytes[{#SNMPVALUE}]'
-                - sortorder: '1'
-                  color: E53935
-                  item:
-                    host: 'pfSense by SNMP'
-                    key: 'pf.if.ip4.out.block.bytes[{#SNMPVALUE}]'
-        - uuid: 62f54fbf15c2402195dee34ddc97b6ad
-          name: 'pf rules discovery'
-          type: SNMP_AGENT
-          snmp_oid: 'discovery[{#SNMPVALUE},1.3.6.1.4.1.12325.1.200.1.11.2.1.2]'
-          key: pf.label.discovery
-          delay: 1h
-          filter:
-            evaltype: AND
-            conditions:
-              - macro: '{#SNMPVALUE}'
-                value: ^.+$
-                formulaid: A
-          description: 'Discovers pf labeled rules (pfLabelsLblName). Only rules with a non-empty label are discovered. Note: multiple rules can share the same label (e.g. IPv4+IPv6 variants) — items are keyed by index.'
-          item_prototypes:
-            - uuid: 726299d78a6346839a9b6f30a5b15b97
-              name: 'pf Rule [{#SNMPINDEX}] {#SNMPVALUE}: Inbound bytes'
-              type: SNMP_AGENT
-              snmp_oid: 'get[1.3.6.1.4.1.12325.1.200.1.11.2.1.4.{#SNMPINDEX}]'
-              key: 'pf.label.bytes.in[{#SNMPINDEX}]'
-              delay: '60'
-              history: 1w
-              value_type: FLOAT
-              units: Bps
-              description: 'pfLabelsLblBytesIn — inbound bytes per second matched by this pf rule.'
-              preprocessing:
-                - type: CHANGE_PER_SECOND
-                  parameters:
-                    - ''
-              tags:
-                - tag: component
-                  value: firewall
-            - uuid: 5a1cf3efc7734f8a85d969bc9e16d144
-              name: 'pf Rule [{#SNMPINDEX}] {#SNMPVALUE}: Outbound bytes'
-              type: SNMP_AGENT
-              snmp_oid: 'get[1.3.6.1.4.1.12325.1.200.1.11.2.1.5.{#SNMPINDEX}]'
-              key: 'pf.label.bytes.out[{#SNMPINDEX}]'
-              delay: '60'
-              history: 1w
-              value_type: FLOAT
-              units: Bps
-              description: 'pfLabelsLblBytesOut — outbound bytes per second matched by this pf rule.'
-              preprocessing:
-                - type: CHANGE_PER_SECOND
-                  parameters:
-                    - ''
-              tags:
-                - tag: component
-                  value: firewall
-            - uuid: a531cb6e480640abba3feb930f56ae2d
-              name: 'pf Rule [{#SNMPINDEX}] {#SNMPVALUE}: Inbound packets'
-              type: SNMP_AGENT
-              snmp_oid: 'get[1.3.6.1.4.1.12325.1.200.1.11.2.1.6.{#SNMPINDEX}]'
-              key: 'pf.label.pkts.in[{#SNMPINDEX}]'
-              delay: '60'
-              history: 1w
-              value_type: FLOAT
-              units: pps
-              description: 'pfLabelsLblPktsIn — inbound packets per second matched by this pf rule.'
-              preprocessing:
-                - type: CHANGE_PER_SECOND
-                  parameters:
-                    - ''
-              tags:
-                - tag: component
-                  value: firewall
-            - uuid: f8c647aaee2647f493f397d9929d36e8
-              name: 'pf Rule [{#SNMPINDEX}] {#SNMPVALUE}: Outbound packets'
-              type: SNMP_AGENT
-              snmp_oid: 'get[1.3.6.1.4.1.12325.1.200.1.11.2.1.7.{#SNMPINDEX}]'
-              key: 'pf.label.pkts.out[{#SNMPINDEX}]'
-              delay: '60'
-              history: 1w
-              value_type: FLOAT
-              units: pps
-              description: 'pfLabelsLblPktsOut — outbound packets per second matched by this pf rule.'
-              preprocessing:
-                - type: CHANGE_PER_SECOND
-                  parameters:
-                    - ''
-              tags:
-                - tag: component
-                  value: firewall
-          graph_prototypes:
-            - uuid: 317616f0d2d24cfbb0718f0531b2053e
-              name: 'pf Rule [{#SNMPINDEX}] {#SNMPVALUE}: Traffic'
-              graph_items:
-                - color: 1A7C11
-                  item:
-                    host: 'pfSense by SNMP'
-                    key: 'pf.label.bytes.in[{#SNMPINDEX}]'
-                - sortorder: '1'
-                  color: E53935
-                  item:
-                    host: 'pfSense by SNMP'
-                    key: 'pf.label.bytes.out[{#SNMPINDEX}]'
-        - uuid: b83951f65ad4459ab05ad1248b494a34
-          name: 'pf tables discovery'
-          type: SNMP_AGENT
-          snmp_oid: 'discovery[{#SNMPVALUE},1.3.6.1.4.1.12325.1.200.1.9.2.1.2]'
-          key: pf.table.discovery
-          delay: 1h
-          description: 'Discovers pf tables (pfTablesTblName) — blocklists such as sshguard, snort2c, bogons, virusprot and network alias tables.'
-          item_prototypes:
-            - uuid: 6bc87a75f5864123bcb368fecb4be18e
-              name: 'pf Table {#SNMPVALUE}: Entry count'
-              type: SNMP_AGENT
-              snmp_oid: 'get[1.3.6.1.4.1.12325.1.200.1.9.2.1.3.{#SNMPINDEX}]'
-              key: 'pf.table.count[{#SNMPVALUE}]'
-              delay: '60'
-              history: 1w
-              units: entries
-              description: 'pfTablesTblCount — current number of IP addresses/networks in this pf table. For sshguard/snort2c/virusprot: growing count indicates active blocking.'
-              tags:
-                - tag: component
-                  value: firewall
-              trigger_prototypes:
-                - uuid: db2736affce94cdc9930a610f75d095a
-                  expression: 'last(/pfSense by SNMP/pf.table.count[{#SNMPVALUE}])>{$PF.TABLE.COUNT.WARN} and {$ENABLE_PF_TABLE_ALERT:"{#SNMPVALUE}"}=1'
-                  name: 'pf Table {#SNMPVALUE}: High entry count (>{$PF.TABLE.COUNT.WARN})'
-                  priority: WARNING
-                  description: 'pf table {#SNMPVALUE} contains more than {$PF.TABLE.COUNT.WARN} entries. For dynamic blocklists (sshguard, snort2c, virusprot) this may indicate an ongoing attack.'
-                  tags:
-                    - tag: scope
-                      value: security
-            - uuid: b5c42dad04b94085be205665423cc935
-              name: 'pf Table {#SNMPVALUE}: Match rate'
-              type: SNMP_AGENT
-              snmp_oid: 'get[1.3.6.1.4.1.12325.1.200.1.9.2.1.7.{#SNMPINDEX}]'
-              key: 'pf.table.eval.match.rate[{#SNMPVALUE}]'
-              delay: '60'
-              history: 1w
-              value_type: FLOAT
-              units: pps
-              description: 'pfTablesTblEvalMatch — packets per second that matched an entry in this table.'
-              preprocessing:
-                - type: CHANGE_PER_SECOND
-                  parameters:
-                    - ''
-              tags:
-                - tag: component
-                  value: firewall
-            - uuid: d4722bcd61b64820aeb66913e337888e
-              name: 'pf Table {#SNMPVALUE}: No-match rate'
-              type: SNMP_AGENT
-              snmp_oid: 'get[1.3.6.1.4.1.12325.1.200.1.9.2.1.8.{#SNMPINDEX}]'
-              key: 'pf.table.eval.nomatch.rate[{#SNMPVALUE}]'
-              delay: '60'
-              history: 1w
-              value_type: FLOAT
-              units: pps
-              description: 'pfTablesTblEvalNoMatch — packets per second evaluated against this table but not found in it.'
-              preprocessing:
-                - type: CHANGE_PER_SECOND
-                  parameters:
-                    - ''
-              tags:
-                - tag: component
-                  value: firewall
-          graph_prototypes:
-            - uuid: 52dcd4804a634be3afbcdfbab06a7636
-              name: 'pf Table {#SNMPVALUE}: Match rate'
-              graph_items:
-                - color: E53935
-                  item:
-                    host: 'pfSense by SNMP'
-                    key: 'pf.table.eval.match.rate[{#SNMPVALUE}]'
-                - sortorder: '1'
-                  color: 1A7C11
-                  item:
-                    host: 'pfSense by SNMP'
-                    key: 'pf.table.eval.nomatch.rate[{#SNMPVALUE}]'
-        - uuid: 1442e3ceaf2f41e69b5a74bbbc22fdb1
-          name: 'Storage discovery'
-          type: SNMP_AGENT
-          snmp_oid: 'discovery[{#SNMPVALUE},1.3.6.1.2.1.25.2.3.1.3]'
-          key: storage.discovery
-          delay: 1h
-          filter:
-            evaltype: AND
-            conditions:
-              - macro: '{#SNMPVALUE}'
-                value: '^(Physical memory|Swap space|/.*)$'
-                formulaid: A
-          description: 'Discovers storage areas: RAM, swap and mounted filesystems.'
-          item_prototypes:
-            - uuid: f3b87e092acd4e0aa52e4ae0d9e691a1
-              name: 'Storage {#SNMPVALUE}: Allocation units'
-              type: SNMP_AGENT
-              snmp_oid: 'get[1.3.6.1.2.1.25.2.3.1.4.{#SNMPINDEX}]'
-              key: 'storage.alloc.units[{#SNMPVALUE}]'
-              delay: 1h
-              history: 1w
-              description: 'hrStorageAllocationUnits — block size in bytes.'
-              preprocessing:
-                - type: DISCARD_UNCHANGED_HEARTBEAT
-                  parameters:
-                    - 6h
-              tags:
-                - tag: component
-                  value: storage
-            - uuid: 08dbb075350f4192b46fabdba0697671
-              name: 'Storage {#SNMPVALUE}: Total size'
-              type: SNMP_AGENT
-              snmp_oid: 'get[1.3.6.1.2.1.25.2.3.1.5.{#SNMPINDEX}]'
-              key: 'storage.total[{#SNMPVALUE}]'
-              delay: 1h
-              history: 1w
-              description: 'hrStorageSize — total size in allocation units.'
-              preprocessing:
-                - type: DISCARD_UNCHANGED_HEARTBEAT
-                  parameters:
-                    - 6h
-              tags:
-                - tag: component
-                  value: storage
-            - uuid: 2814452742504e47af1b612bdfa9fff1
-              name: 'Storage {#SNMPVALUE}: Used'
-              type: SNMP_AGENT
-              snmp_oid: 'get[1.3.6.1.2.1.25.2.3.1.6.{#SNMPINDEX}]'
-              key: 'storage.used[{#SNMPVALUE}]'
-              delay: '60'
-              history: 1w
-              description: 'hrStorageUsed — used allocation units.'
-              tags:
-                - tag: component
-                  value: storage
-            - uuid: f3b2b56befb745efb48a5bb03b0a317b
-              name: 'Storage {#SNMPVALUE}: Utilization'
-              type: CALCULATED
-              key: 'storage.util[{#SNMPVALUE}]'
-              delay: '60'
-              history: 1w
-              value_type: FLOAT
-              units: '%'
-              params: 'last(/{HOST.HOST}/storage.used[{#SNMPVALUE}]) / last(/{HOST.HOST}/storage.total[{#SNMPVALUE}]) * 100'
-              description: 'Calculated storage utilization percentage.'
-              tags:
-                - tag: component
-                  value: storage
-              trigger_prototypes:
-                - uuid: f3b0cc29792e495887290da04bd197ee
-                  expression: 'last(/pfSense by SNMP/storage.util[{#SNMPVALUE}])>{$STORAGE.UTIL.CRIT} and {$ENABLE_STORAGE_ALERT}=1'
-                  name: 'Storage {#SNMPVALUE}: Critically full'
-                  opdata: 'Used: {ITEM.LASTVALUE1}'
-                  priority: HIGH
-                  tags:
-                    - tag: scope
-                      value: capacity
-                - uuid: 26586ef06f734e61999c239fc5fc0dd3
-                  expression: 'last(/pfSense by SNMP/storage.util[{#SNMPVALUE}])>{$STORAGE.UTIL.WARN} and {$ENABLE_STORAGE_ALERT}=1'
-                  name: 'Storage {#SNMPVALUE}: High utilization'
-                  opdata: 'Used: {ITEM.LASTVALUE1}'
-                  priority: AVERAGE
-                  dependencies:
-                    - name: 'Storage {#SNMPVALUE}: Critically full'
-                      expression: 'last(/pfSense by SNMP/storage.util[{#SNMPVALUE}])>{$STORAGE.UTIL.CRIT} and {$ENABLE_STORAGE_ALERT}=1'
-                  tags:
-                    - tag: scope
-                      value: capacity
-          graph_prototypes:
-            - uuid: 5ca53ee07c724803bcd7412af188048b
-              name: 'Storage {#SNMPVALUE}: Utilization'
-              graph_items:
-                - color: 42A5F5
-                  item:
-                    host: 'pfSense by SNMP'
-                    key: 'storage.util[{#SNMPVALUE}]'
-      macros:
-        - macro: '{$CPU.UTIL.CRIT}'
-          value: '90'
-          description: 'Critical CPU utilization threshold (%)'
-        - macro: '{$CPU.UTIL.WARN}'
-          value: '80'
-          description: 'Warning threshold for CPU utilization (%)'
-        - macro: '{$DISK.IO.DEVICE.NOT_MATCHES}'
-          value: '^pass[0-9]'
-          description: 'Regex: exclude passthrough devices from disk I/O discovery'
-        - macro: '{$ENABLE_CPU_CORE_ALERT}'
-          value: '1'
-          description: 'Set to 0 to suppress per-core CPU utilization alerts globally.'
-        - macro: '{$ENABLE_IF_ERROR_ALERT}'
-          value: '1'
-          description: 'Set to 0 to suppress interface error rate alerts. Supports context: {$ENABLE_IF_ERROR_ALERT:"em0"}'
-        - macro: '{$ENABLE_IF_UTIL_ALERT}'
-          value: '1'
-          description: 'Set to 0 to suppress interface utilization alerts. Supports context: {$ENABLE_IF_UTIL_ALERT:"em0"}'
-        - macro: '{$ENABLE_LINK_DOWN_ALERT}'
-          value: '1'
-          description: 'Set to 0 to suppress interface link down alerts. Supports context macros for per-interface control: {$ENABLE_LINK_DOWN_ALERT:"em0"}'
-        - macro: '{$ENABLE_PF_BLOCK_ALERT}'
-          value: '1'
-          description: 'Set to 0 to suppress pf interface block rate alerts. Supports context: {$ENABLE_PF_BLOCK_ALERT:"em0"}'
-        - macro: '{$ENABLE_PF_TABLE_ALERT}'
-          value: '1'
-          description: 'Set to 0 to suppress pf table entry count alerts. Supports context: {$ENABLE_PF_TABLE_ALERT:"sshguard"}'
-        - macro: '{$ENABLE_STORAGE_ALERT}'
-          value: '1'
-          description: 'Set to 0 to suppress storage utilization alerts globally.'
-        - macro: '{$ICMP_LOSS_WARN}'
-          value: '20'
-          description: 'Warning threshold for ICMP packet loss (%)'
-        - macro: '{$ICMP_RESPONSE_TIME_WARN}'
-          value: '0.15'
-          description: 'Warning threshold for ICMP response time (seconds)'
-        - macro: '{$IF.ERRORS.WARN}'
-          value: '2'
-          description: 'Warning threshold for interface errors per second'
-        - macro: '{$IF.UTIL.MAX}'
-          value: '90'
-          description: 'Warning threshold for interface utilization (%)'
-        - macro: '{$LOAD.AVG.WARN}'
-          value: '4'
-          description: 'Warning threshold for system load average (5-minute)'
-        - macro: '{$MEMORY.SWAP.WARN}'
-          value: '80'
-          description: 'Warning threshold for swap utilization (%)'
-        - macro: '{$MEMORY.UTIL.MAX}'
-          value: '90'
-          description: 'Warning threshold for memory utilization (%)'
-        - macro: '{$NET.IF.IFNAME.MATCHES}'
-          value: '^.*$'
-          description: 'Regex: only discover interfaces matching this pattern'
-        - macro: '{$NET.IF.IFNAME.NOT_MATCHES}'
-          value: '^(pflog|pfsync|enc|lo)\d*$'
-          description: 'Regex: exclude internal pfSense interfaces from discovery'
-        - macro: '{$PF.IF.BLOCK.WARN}'
-          value: '100'
-          description: 'Warning threshold for pf blocked packets per second per interface'
-        - macro: '{$PF.STATE.UTIL.CRIT}'
-          value: '90'
-          description: 'Critical threshold for pf state table utilization (%)'
-        - macro: '{$PF.STATE.UTIL.WARN}'
-          value: '80'
-          description: 'Warning threshold for pf state table utilization (%)'
-        - macro: '{$PF.TABLE.COUNT.WARN}'
-          value: '100'
-          description: 'Warning threshold for pf table entry count (sshguard/snort2c blocked IPs)'
-        - macro: '{$PFSENSE.VERSION.EXPECTED}'
-          value: 2.8.1
-          description: 'Expected pfSense CE version. Update this macro when a new release is available to trigger an alert on outdated hosts.'
-        - macro: '{$SNMP_COMMUNITY}'
-          value: public
-          description: 'SNMP v2c community string'
-        - macro: '{$STORAGE.UTIL.CRIT}'
-          value: '90'
-          description: 'Critical threshold for storage utilization (%)'
-        - macro: '{$STORAGE.UTIL.WARN}'
-          value: '80'
-          description: 'Warning threshold for storage utilization (%)'
-        - macro: '{$SYSTEM.USERS.MAX}'
-          value: '0'
-          description: 'Max allowed logged-in users (0 = any login triggers alert)'
-        - macro: '{$TCP.ESTAB.MAX}'
-          value: '10000'
-          description: 'Max allowed TCP established connections before warning'
-      dashboards:
-        - uuid: a1f47c640a784abe9ef2a4f1fa0c15e2
-          name: 'pfSense Overview'
-          pages:
-            - name: Overview
-              widgets:
-                - type: item
-                  name: 'pf Firewall Status'
-                  width: '9'
-                  height: '3'
-                  fields:
-                    - type: ITEM
-                      name: itemid
-                      value:
-                        host: 'pfSense by SNMP'
-                        key: pf.running
-                    - type: INTEGER
-                      name: show_description
-                      value: '0'
-                - type: problems
-                  name: 'Active Problems'
-                  'y': '3'
-                  width: '36'
-                  height: '5'
-                  fields:
-                    - type: INTEGER
-                      name: show_suppressed
-                      value: '0'
-                - type: item
-                  name: 'pf State Table: Current'
-                  'y': '8'
-                  width: '12'
-                  height: '3'
-                  fields:
-                    - type: ITEM
-                      name: itemid
-                      value:
-                        host: 'pfSense by SNMP'
-                        key: pf.states.current
-                    - type: INTEGER
-                      name: show_description
-                      value: '0'
-                - type: item
-                  name: 'CPU Utilization'
-                  'y': '11'
-                  width: '9'
-                  height: '3'
-                  fields:
-                    - type: ITEM
-                      name: itemid
-                      value:
-                        host: 'pfSense by SNMP'
-                        key: system.cpu.util
-                    - type: INTEGER
-                      name: show_description
-                      value: '0'
-                - type: item
-                  name: 'System Description'
-                  'y': '14'
-                  width: '18'
-                  height: '3'
-                  fields:
-                    - type: ITEM
-                      name: itemid
-                      value:
-                        host: 'pfSense by SNMP'
-                        key: system.descr
-                    - type: INTEGER
-                      name: show_description
-                      value: '0'
-                - type: item
-                  name: 'Version: Installed'
-                  'y': '17'
-                  width: '18'
-                  height: '3'
-                  fields:
-                    - type: ITEM
-                      name: itemid
-                      value:
-                        host: 'pfSense by SNMP'
-                        key: pfsense.version
-                    - type: INTEGER
-                      name: show_description
-                      value: '0'
-                - type: item
-                  name: 'System Uptime'
-                  x: '9'
-                  width: '9'
-                  height: '3'
-                  fields:
-                    - type: ITEM
-                      name: itemid
-                      value:
-                        host: 'pfSense by SNMP'
-                        key: system.uptime
-                    - type: INTEGER
-                      name: show_description
-                      value: '0'
-                - type: item
-                  name: 'Memory Utilization'
-                  x: '9'
-                  'y': '11'
-                  width: '9'
-                  height: '3'
-                  fields:
-                    - type: ITEM
-                      name: itemid
-                      value:
-                        host: 'pfSense by SNMP'
-                        key: vm.memory.util
-                    - type: INTEGER
-                      name: show_description
-                      value: '0'
-                - type: item
-                  name: 'pf State Table: Limit'
-                  x: '12'
-                  'y': '8'
-                  width: '12'
-                  height: '3'
-                  fields:
-                    - type: ITEM
-                      name: itemid
-                      value:
-                        host: 'pfSense by SNMP'
-                        key: pf.states.limit
-                    - type: INTEGER
-                      name: show_description
-                      value: '0'
-                - type: item
-                  name: 'pf State Table Utilization'
-                  x: '18'
-                  width: '9'
-                  height: '3'
-                  fields:
-                    - type: ITEM
-                      name: itemid
-                      value:
-                        host: 'pfSense by SNMP'
-                        key: pf.states.util
-                    - type: INTEGER
-                      name: show_description
-                      value: '0'
-                - type: item
-                  name: 'Swap Utilization'
-                  x: '18'
-                  'y': '11'
-                  width: '9'
-                  height: '3'
-                  fields:
-                    - type: ITEM
-                      name: itemid
-                      value:
-                        host: 'pfSense by SNMP'
-                        key: vm.memory.swap.util
-                    - type: INTEGER
-                      name: show_description
-                      value: '0'
-                - type: item
-                  name: 'System Location'
-                  x: '18'
-                  'y': '14'
-                  width: '9'
-                  height: '3'
-                  fields:
-                    - type: ITEM
-                      name: itemid
-                      value:
-                        host: 'pfSense by SNMP'
-                        key: system.location
-                    - type: INTEGER
-                      name: show_description
-                      value: '0'
-                - type: item
-                  name: 'Version: Available'
-                  x: '18'
-                  'y': '17'
-                  width: '18'
-                  height: '3'
-                  fields:
-                    - type: ITEM
-                      name: itemid
-                      value:
-                        host: 'pfSense by SNMP'
-                        key: pfsense.version.available
-                    - type: INTEGER
-                      name: show_description
-                      value: '0'
-                - type: item
-                  name: 'Source Nodes'
-                  x: '24'
-                  'y': '8'
-                  width: '12'
-                  height: '3'
-                  fields:
-                    - type: ITEM
-                      name: itemid
-                      value:
-                        host: 'pfSense by SNMP'
-                        key: pf.src.nodes
-                    - type: INTEGER
-                      name: show_description
-                      value: '0'
-                - type: item
-                  name: 'System Hostname'
-                  x: '27'
-                  width: '9'
-                  height: '3'
-                  fields:
-                    - type: ITEM
-                      name: itemid
-                      value:
-                        host: 'pfSense by SNMP'
-                        key: system.hostname
-                    - type: INTEGER
-                      name: show_description
-                      value: '0'
-                - type: item
-                  name: 'IP Forwarding'
-                  x: '27'
-                  'y': '11'
-                  width: '9'
-                  height: '3'
-                  fields:
-                    - type: ITEM
-                      name: itemid
-                      value:
-                        host: 'pfSense by SNMP'
-                        key: system.ipforward
-                    - type: INTEGER
-                      name: show_description
-                      value: '0'
-                - type: item
-                  name: 'System Contact'
-                  x: '27'
-                  'y': '14'
-                  width: '9'
-                  height: '3'
-                  fields:
-                    - type: ITEM
-                      name: itemid
-                      value:
-                        host: 'pfSense by SNMP'
-                        key: system.contact
-                    - type: INTEGER
-                      name: show_description
-                      value: '0'
-            - name: Interfaces
-              widgets:
-                - type: graphprototype
-                  name: 'Interface Traffic'
-                  width: '36'
-                  height: '8'
-                  fields:
-                    - type: INTEGER
-                      name: columns
-                      value: '2'
-                    - type: GRAPH_PROTOTYPE
-                      name: graphid.0
-                      value:
-                        host: 'pfSense by SNMP'
-                        name: 'Interface {#SNMPVALUE}: Traffic'
-                    - type: STRING
-                      name: reference
-                      value: AAPFS
-            - name: 'CPU & Storage'
-              widgets:
-                - type: item
-                  name: 'CPU Utilization'
-                  width: '9'
-                  height: '3'
-                  fields:
-                    - type: ITEM
-                      name: itemid
-                      value:
-                        host: 'pfSense by SNMP'
-                        key: system.cpu.util
-                    - type: INTEGER
-                      name: show_description
-                      value: '1'
-                - type: graphprototype
-                  name: 'CPU Utilization per Core'
-                  'y': '3'
-                  width: '36'
-                  height: '7'
-                  fields:
-                    - type: INTEGER
-                      name: columns
-                      value: '2'
-                    - type: GRAPH_PROTOTYPE
-                      name: graphid.0
-                      value:
-                        host: 'pfSense by SNMP'
-                        name: 'CPU core {#SNMPINDEX}: Utilization'
-                    - type: STRING
-                      name: reference
-                      value: BBPFS
-                - type: graphprototype
-                  name: 'Storage Utilization'
-                  'y': '10'
-                  width: '18'
-                  height: '7'
-                  fields:
-                    - type: INTEGER
-                      name: columns
-                      value: '2'
-                    - type: GRAPH_PROTOTYPE
-                      name: graphid.0
-                      value:
-                        host: 'pfSense by SNMP'
-                        name: 'Storage {#SNMPVALUE}: Utilization'
-                    - type: STRING
-                      name: reference
-                      value: CCPFS
-                - type: item
-                  name: 'Memory Utilization'
-                  x: '9'
-                  width: '9'
-                  height: '3'
-                  fields:
-                    - type: ITEM
-                      name: itemid
-                      value:
-                        host: 'pfSense by SNMP'
-                        key: vm.memory.util
-                    - type: INTEGER
-                      name: show_description
-                      value: '1'
-                - type: item
-                  name: 'Swap Utilization'
-                  x: '18'
-                  width: '9'
-                  height: '3'
-                  fields:
-                    - type: ITEM
-                      name: itemid
-                      value:
-                        host: 'pfSense by SNMP'
-                        key: vm.memory.swap.util
-                    - type: INTEGER
-                      name: show_description
-                      value: '1'
-                - type: graphprototype
-                  name: 'Disk I/O Throughput'
-                  x: '18'
-                  'y': '10'
-                  width: '18'
-                  height: '7'
-                  fields:
-                    - type: INTEGER
-                      name: columns
-                      value: '2'
-                    - type: GRAPH_PROTOTYPE
-                      name: graphid.0
-                      value:
-                        host: 'pfSense by SNMP'
-                        name: 'Disk {#SNMPVALUE}: I/O throughput'
-                    - type: STRING
-                      name: reference
-                      value: DDPFS
-                - type: item
-                  name: 'Load Average (5 min)'
-                  x: '27'
-                  width: '9'
-                  height: '3'
-                  fields:
-                    - type: ITEM
-                      name: itemid
-                      value:
-                        host: 'pfSense by SNMP'
-                        key: system.load.avg5
-                    - type: INTEGER
-                      name: show_description
-                      value: '1'
-            - name: 'pf Firewall'
-              widgets:
-                - type: item
-                  name: 'New Connections/s'
-                  width: '9'
-                  height: '3'
-                  fields:
-                    - type: ITEM
-                      name: itemid
-                      value:
-                        host: 'pfSense by SNMP'
-                        key: pf.states.inserts.rate
-                    - type: INTEGER
-                      name: show_description
-                      value: '0'
-                - type: graphprototype
-                  name: 'pf Pass vs Block per Interface (inbound)'
-                  'y': '3'
-                  width: '18'
-                  height: '7'
-                  fields:
-                    - type: INTEGER
-                      name: columns
-                      value: '2'
-                    - type: GRAPH_PROTOTYPE
-                      name: graphid.0
-                      value:
-                        host: 'pfSense by SNMP'
-                        name: 'pf Interface {#SNMPVALUE}: Passed vs Blocked (inbound)'
-                    - type: STRING
-                      name: reference
-                      value: EEPFS
-                - type: item
-                  name: 'Closed Connections/s'
-                  x: '9'
-                  width: '9'
-                  height: '3'
-                  fields:
-                    - type: ITEM
-                      name: itemid
-                      value:
-                        host: 'pfSense by SNMP'
-                        key: pf.states.removals.rate
-                    - type: INTEGER
-                      name: show_description
-                      value: '0'
-                - type: item
-                  name: 'IPv4 Inbound Passed/s'
-                  x: '18'
-                  width: '9'
-                  height: '3'
-                  fields:
-                    - type: ITEM
-                      name: itemid
-                      value:
-                        host: 'pfSense by SNMP'
-                        key: pf.log.ip4.in.pass.rate
-                    - type: INTEGER
-                      name: show_description
-                      value: '0'
-                - type: graphprototype
-                  name: 'pf Pass vs Block per Interface (outbound)'
-                  x: '18'
-                  'y': '3'
-                  width: '18'
-                  height: '7'
-                  fields:
-                    - type: INTEGER
-                      name: columns
-                      value: '2'
-                    - type: GRAPH_PROTOTYPE
-                      name: graphid.0
-                      value:
-                        host: 'pfSense by SNMP'
-                        name: 'pf Interface {#SNMPVALUE}: Passed vs Blocked (outbound)'
-                    - type: STRING
-                      name: reference
-                      value: FFPFS
-                - type: item
-                  name: 'IPv4 Inbound Dropped/s'
-                  x: '27'
-                  width: '9'
-                  height: '3'
-                  fields:
-                    - type: ITEM
-                      name: itemid
-                      value:
-                        host: 'pfSense by SNMP'
-                        key: pf.log.ip4.in.drop.rate
-                    - type: INTEGER
-                      name: show_description
-                      value: '0'
-            - name: 'pf Tables'
-              widgets:
-                - type: graphprototype
-                  name: 'pf Table Match Rates'
-                  width: '36'
-                  height: '8'
-                  fields:
-                    - type: INTEGER
-                      name: columns
-                      value: '3'
-                    - type: GRAPH_PROTOTYPE
-                      name: graphid.0
-                      value:
-                        host: 'pfSense by SNMP'
-                        name: 'pf Table {#SNMPVALUE}: Match rate'
-                    - type: STRING
-                      name: reference
-                      value: GGPFS
-            - name: 'pf Rules'
-              widgets:
-                - type: graphprototype
-                  name: 'pf Rule Traffic'
-                  width: '36'
-                  height: '10'
-                  fields:
-                    - type: INTEGER
-                      name: columns
-                      value: '3'
-                    - type: GRAPH_PROTOTYPE
-                      name: graphid.0
-                      value:
-                        host: 'pfSense by SNMP'
-                        name: 'pf Rule [{#SNMPINDEX}] {#SNMPVALUE}: Traffic'
-                    - type: STRING
-                      name: reference
-                      value: HHPFS
-      valuemaps:
-        - uuid: 52cb33702153442d86b827c5fdae460e
-          name: 'IF-MIB::ifAdminStatus'
-          mappings:
-            - value: '1'
-              newvalue: up
-            - value: '2'
-              newvalue: down
-            - value: '3'
-              newvalue: testing
-        - uuid: e7edf8f9c13e494d9c902095d5f513cf
-          name: 'IF-MIB::ifOperStatus'
-          mappings:
-            - value: '1'
-              newvalue: up
-            - value: '2'
-              newvalue: down
-            - value: '3'
-              newvalue: testing
-            - value: '4'
-              newvalue: unknown
-            - value: '5'
-              newvalue: dormant
-            - value: '6'
-              newvalue: notPresent
-            - value: '7'
-              newvalue: lowerLayerDown
-        - uuid: 6ba7d28c2849449688219996aab566a2
-          name: 'pfSense IP forwarding'
-          mappings:
-            - value: '1'
-              newvalue: forwarding
-            - value: '2'
-              newvalue: notForwarding
-            - type: DEFAULT
-              newvalue: unknown
-        - uuid: 2398a6377d204c638a631051d7610925
-          name: 'pfSense pf status'
-          mappings:
-            - value: '1'
-              newvalue: running
-            - value: '2'
-              newvalue: stopped
-            - type: DEFAULT
-              newvalue: unknown
-        - uuid: 0462991ea5454ca1ba88314f51f41738
-          name: 'Service state'
-          mappings:
-            - value: '0'
-              newvalue: Down
-            - value: '1'
-              newvalue: Up
-  triggers:
-    - uuid: 95b771391fe64b6ea592661ca7c87915
-      expression: 'last(/pfSense by SNMP/pfsense.version)<>last(/pfSense by SNMP/pfsense.version.available) and last(/pfSense by SNMP/pfsense.version.available)<>""'
-      name: 'pfSense: Update available (installed: {ITEM.LASTVALUE}, latest: {?last(/pfSense by SNMP/pfsense.version.available)})'
-      priority: INFO
-      description: 'Installed pfSense version differs from latest release on docs.netgate.com.'
-      manual_close: 'YES'
+  - uuid: 4c76bf44638d4eb58b3c626059abae32
+    template: pfSense by SNMP
+    name: pfSense by SNMP
+    description: |
+      Zabbix template for monitoring pfSense firewalls via SNMP (bsnmpd). No Zabbix agent is required.
+
+      Created by Thomas Rzen.
+      For documentation, updates, and source code, visit:
+      https://github.com/Garfieldttt/Zabbix-Template-pfSense-SNMP
+    groups:
+    - name: Templates/Network appliances
+    macros:
+    - macro: '{$SNMP_COMMUNITY}'
+      value: public
+      description: SNMP v2c community string
+    - macro: '{$ICMP_LOSS_WARN}'
+      value: '20'
+      description: Warning threshold for ICMP packet loss (%)
+    - macro: '{$ICMP_RESPONSE_TIME_WARN}'
+      value: '0.15'
+      description: Warning threshold for ICMP response time (seconds)
+    - macro: '{$CPU.UTIL.CRIT}'
+      value: '90'
+      description: Critical CPU utilization threshold (%)
+    - macro: '{$MEMORY.UTIL.MAX}'
+      value: '90'
+      description: Warning threshold for memory utilization (%)
+    - macro: '{$STORAGE.UTIL.WARN}'
+      value: '80'
+      description: Warning threshold for storage utilization (%)
+    - macro: '{$STORAGE.UTIL.CRIT}'
+      value: '90'
+      description: Critical threshold for storage utilization (%)
+    - macro: '{$PF.STATE.UTIL.WARN}'
+      value: '80'
+      description: Warning threshold for pf state table utilization (%)
+    - macro: '{$PF.STATE.UTIL.CRIT}'
+      value: '90'
+      description: Critical threshold for pf state table utilization (%)
+    - macro: '{$IF.UTIL.MAX}'
+      value: '90'
+      description: Warning threshold for interface utilization (%)
+    - macro: '{$IF.ERRORS.WARN}'
+      value: '2'
+      description: Warning threshold for interface errors per second
+    - macro: '{$NET.IF.IFNAME.MATCHES}'
+      value: ^.*$
+      description: 'Regex: only discover interfaces matching this pattern'
+    - macro: '{$NET.IF.IFNAME.NOT_MATCHES}'
+      value: ^(pflog|pfsync|enc|lo)\d*$
+      description: 'Regex: exclude internal pfSense interfaces from discovery'
+    - macro: '{$PF.IF.BLOCK.WARN}'
+      value: '100'
+      description: Warning threshold for pf blocked packets per second per interface
+    - macro: '{$PF.TABLE.COUNT.WARN}'
+      value: '100'
+      description: Warning threshold for pf table entry count (sshguard/snort2c blocked IPs)
+    - macro: '{$LOAD.AVG.WARN}'
+      value: '4'
+      description: Warning threshold for system load average (5-minute)
+    - macro: '{$DISK.IO.DEVICE.NOT_MATCHES}'
+      value: ^pass[0-9]
+      description: 'Regex: exclude passthrough devices from disk I/O discovery'
+    - macro: '{$TCP.ESTAB.MAX}'
+      value: '10000'
+      description: Max allowed TCP established connections before warning
+    - macro: '{$SYSTEM.USERS.MAX}'
+      value: '0'
+      description: Max allowed logged-in users (0 = any login triggers alert)
+    - macro: '{$CPU.UTIL.WARN}'
+      value: '80'
+      description: Warning threshold for CPU utilization (%)
+    - macro: '{$MEMORY.SWAP.WARN}'
+      value: '80'
+      description: Warning threshold for swap utilization (%)
+    - macro: '{$PFSENSE.VERSION.EXPECTED}'
+      value: 2.8.1
+      description: Expected pfSense CE version. Update this macro when a new release is available to trigger an alert on outdated hosts.
+    - macro: '{$ENABLE_LINK_DOWN_ALERT}'
+      value: '1'
+      description: 'Set to 0 to suppress interface link down alerts. Supports context macros for per-interface control: {$ENABLE_LINK_DOWN_ALERT:"em0"}'
+    - macro: '{$ENABLE_IF_UTIL_ALERT}'
+      value: '1'
+      description: 'Set to 0 to suppress interface utilization alerts. Supports context: {$ENABLE_IF_UTIL_ALERT:"em0"}'
+    - macro: '{$ENABLE_IF_ERROR_ALERT}'
+      value: '1'
+      description: 'Set to 0 to suppress interface error rate alerts. Supports context: {$ENABLE_IF_ERROR_ALERT:"em0"}'
+    - macro: '{$ENABLE_CPU_CORE_ALERT}'
+      value: '1'
+      description: Set to 0 to suppress per-core CPU utilization alerts globally.
+    - macro: '{$ENABLE_STORAGE_ALERT}'
+      value: '1'
+      description: Set to 0 to suppress storage utilization alerts globally.
+    - macro: '{$ENABLE_PF_BLOCK_ALERT}'
+      value: '1'
+      description: 'Set to 0 to suppress pf interface block rate alerts. Supports context: {$ENABLE_PF_BLOCK_ALERT:"em0"}'
+    - macro: '{$ENABLE_PF_TABLE_ALERT}'
+      value: '0'
+      description: 'Default 0 — only known dynamic blocklists are alerted. Set to 1 per table via context macro: {$ENABLE_PF_TABLE_ALERT:"sshguard"}'
+    - macro: '{$ENABLE_PF_TABLE_ALERT:"sshguard"}'
+      value: '1'
+      description: Enable entry count alert for sshguard table
+    - macro: '{$ENABLE_PF_TABLE_ALERT:"snort2c"}'
+      value: '1'
+      description: Enable entry count alert for snort2c table
+    - macro: '{$ENABLE_PF_TABLE_ALERT:"virusprot"}'
+      value: '1'
+      description: Enable entry count alert for virusprot table
+    - macro: '{$ENABLE_PF_TABLE_ALERT:"sshlockout"}'
+      value: '1'
+      description: Enable entry count alert for sshlockout table
+    items:
+    - uuid: 05c0c60ee1c84538bce41d2cb94895b2
+      name: ICMP ping
+      type: SIMPLE
+      key: icmpping
+      description: 'Host accessibility by ICMP ping.
+
+        0 = unreachable, 1 = reachable.
+
+        '
+      valuemap:
+        name: Service state
       tags:
+      - tag: component
+        value: health
+      triggers:
+      - uuid: e55f8aeaebd04c6c99470ec8b83bbfaf
+        expression: max(/pfSense by SNMP/icmpping,#3)=0
+        name: 'pfSense: Unavailable by ICMP ping'
+        priority: DISASTER
+        description: Last three ICMP attempts timed out. Check device connectivity.
+        tags:
+        - tag: scope
+          value: availability
+    - uuid: 9cbc3625fe364255a617bdeb5caaaaba
+      name: ICMP loss
+      type: SIMPLE
+      key: icmppingloss
+      value_type: FLOAT
+      units: '%'
+      description: Percentage of lost ICMP packets.
+      tags:
+      - tag: component
+        value: health
+      triggers:
+      - uuid: eca1a34680e8449e9c4e9261c38f52a4
+        expression: min(/pfSense by SNMP/icmppingloss,5m)>{$ICMP_LOSS_WARN} and min(/pfSense by SNMP/icmppingloss,5m)<100
+        name: 'pfSense: High ICMP packet loss'
+        opdata: 'Loss: {ITEM.LASTVALUE1}'
+        priority: AVERAGE
+        dependencies:
+        - name: 'pfSense: Unavailable by ICMP ping'
+          expression: max(/pfSense by SNMP/icmpping,#3)=0
+        tags:
+        - tag: scope
+          value: availability
+    - uuid: 0124a0ec5aea4b6397b957ac4b77930b
+      name: ICMP response time
+      type: SIMPLE
+      key: icmppingsec
+      value_type: FLOAT
+      units: s
+      description: ICMP ping response time in seconds.
+      tags:
+      - tag: component
+        value: health
+      triggers:
+      - uuid: 37b7b394b9b54c79bdc6d23654e7eea9
+        expression: avg(/pfSense by SNMP/icmppingsec,5m)>{$ICMP_RESPONSE_TIME_WARN}
+        name: 'pfSense: High ICMP response time'
+        opdata: 'Value: {ITEM.LASTVALUE1}'
+        priority: WARNING
+        dependencies:
+        - name: 'pfSense: Unavailable by ICMP ping'
+          expression: max(/pfSense by SNMP/icmpping,#3)=0
+        - name: 'pfSense: High ICMP packet loss'
+          expression: min(/pfSense by SNMP/icmppingloss,5m)>{$ICMP_LOSS_WARN} and min(/pfSense by SNMP/icmppingloss,5m)<100
+        tags:
+        - tag: scope
+          value: availability
+    - uuid: 5a131ae12b0644718aa722adbe092b9c
+      name: System description
+      type: SNMP_AGENT
+      snmp_oid: get[1.3.6.1.2.1.1.1.0]
+      key: system.descr
+      delay: 1h
+      history: 1w
+      trends: '0'
+      value_type: CHAR
+      description: sysDescr — OS version and hardware info.
+      preprocessing:
+      - type: DISCARD_UNCHANGED_HEARTBEAT
+        parameters:
+        - 1d
+      tags:
+      - tag: component
+        value: system
+      triggers:
+      - uuid: 0fe15b7654ea44ecace6464589b2eb5a
+        expression: last(/pfSense by SNMP/system.descr,#1)<>last(/pfSense by SNMP/system.descr,#2)
+        name: 'pfSense: System version has changed'
+        priority: INFO
+        description: sysDescr changed — a pfSense update may have been applied. Verify the new version.
+        manual_close: 'YES'
+        tags:
         - tag: scope
           value: notice
+    - uuid: 5111b5c8245e4b4194370a2424a779d2
+      name: System version (installed)
+      type: SNMP_AGENT
+      snmp_oid: get[1.3.6.1.2.1.1.1.0]
+      key: pfsense.version
+      delay: 1h
+      history: 1w
+      trends: '0'
+      value_type: CHAR
+      description: pfSense version extracted from sysDescr (1.3.6.1.2.1.1.1.0), e.g. "2.8.1".
+      preprocessing:
+      - type: REGEX
+        parameters:
+        - (\d+\.\d+\.\d+)-\w*RELEASE
+        - \1
+      - type: DISCARD_UNCHANGED_HEARTBEAT
+        parameters:
+        - 1d
+      tags:
+      - tag: component
+        value: system
+      triggers:
+      - uuid: 95b771391fe64b6ea592661ca7c87915
+        expression: last(/pfSense by SNMP/pfsense.version)<>last(/pfSense by SNMP/pfsense.version.available) and last(/pfSense by SNMP/pfsense.version.available)<>""
+        name: 'pfSense: Update available (installed: {ITEM.LASTVALUE}, latest: {?last(/pfSense by SNMP/pfsense.version.available)})'
+        priority: INFO
+        description: Installed pfSense version differs from latest release on docs.netgate.com.
+        manual_close: 'YES'
+        tags:
+        - tag: scope
+          value: notice
+    - uuid: 49461e7a69c343f79a6fba65b24bb911
+      name: System version (available)
+      type: HTTP_AGENT
+      key: pfsense.version.available
+      delay: 1d
+      history: 1w
+      trends: '0'
+      value_type: CHAR
+      url: https://docs.netgate.com/pfsense/en/latest/releases/index.html
+      description: Latest pfSense CE release version from docs.netgate.com/pfsense/en/latest/releases/. Checks daily.
+      preprocessing:
+      - type: REGEX
+        parameters:
+        - (2\.\d+\.\d+)
+        - \1
+      - type: DISCARD_UNCHANGED_HEARTBEAT
+        parameters:
+        - 7d
+      tags:
+      - tag: component
+        value: system
+    - uuid: 1def021a4c9c43aaacb9a00cfb194334
+      name: System hostname
+      type: SNMP_AGENT
+      snmp_oid: get[1.3.6.1.2.1.1.5.0]
+      key: system.hostname
+      description: sysName — configured hostname.
+      delay: 1h
+      history: 1w
+      trends: '0'
+      value_type: CHAR
+      preprocessing:
+      - type: DISCARD_UNCHANGED_HEARTBEAT
+        parameters:
+        - 1d
+      tags:
+      - tag: component
+        value: system
+    - uuid: 29c97f2aa0d04c02aaa61ddcd6004fe9
+      name: System uptime
+      type: SNMP_AGENT
+      snmp_oid: get[1.3.6.1.2.1.1.3.0]
+      key: system.uptime
+      description: sysUpTime — time since last reboot (hundredths of seconds, converted to seconds).
+      delay: '60'
+      history: 1w
+      value_type: FLOAT
+      units: uptime
+      preprocessing:
+      - type: MULTIPLIER
+        parameters:
+        - '0.01'
+      tags:
+      - tag: component
+        value: system
+      triggers:
+      - uuid: 6ed3b52884f54e4d95b965da54d77bc8
+        expression: last(/pfSense by SNMP/system.uptime)<600
+        name: 'pfSense: Device has been restarted'
+        priority: WARNING
+        description: Uptime is less than 10 minutes — device recently rebooted.
+        manual_close: 'YES'
+        tags:
+        - tag: scope
+          value: notice
+    - uuid: 9b5c84159a1e44cbaa5cad0b21a6edce
+      name: System location
+      type: SNMP_AGENT
+      snmp_oid: get[1.3.6.1.2.1.1.6.0]
+      key: system.location
+      description: sysLocation — configured physical location.
+      delay: 1h
+      history: 1w
+      trends: '0'
+      value_type: CHAR
+      preprocessing:
+      - type: DISCARD_UNCHANGED_HEARTBEAT
+        parameters:
+        - 1d
+      tags:
+      - tag: component
+        value: system
+    - uuid: 1084c7dc233c421ebd95f8a17140285e
+      name: 'pf: Firewall running'
+      type: SNMP_AGENT
+      snmp_oid: get[1.3.6.1.4.1.12325.1.200.1.1.1.0]
+      key: pf.running
+      description: pfRunning — whether the pf packet filter is active. 1=running, 2=stopped.
+      delay: '60'
+      history: 1w
+      value_type: UNSIGNED
+      valuemap:
+        name: pfSense pf status
+      tags:
+      - tag: component
+        value: firewall
+      triggers:
+      - uuid: 2631ce49d77c43bca3614410ae1ea94d
+        expression: last(/pfSense by SNMP/pf.running)<>1
+        name: 'pfSense: pf firewall is not running'
+        priority: DISASTER
+        description: The pf packet filter is stopped. Firewall protection is inactive.
+        tags:
+        - tag: scope
+          value: availability
+    - uuid: c4585f8501dd420b890059d7b079d924
+      name: 'pf: State table current entries'
+      type: SNMP_AGENT
+      snmp_oid: get[1.3.6.1.4.1.12325.1.200.1.3.1.0]
+      key: pf.states.current
+      description: pfStateCount — current number of entries in the pf state table.
+      delay: '60'
+      history: 1w
+      value_type: UNSIGNED
+      tags:
+      - tag: component
+        value: firewall
+    - uuid: 27d35593a5c44a7ea80f6ea3a0f7fa98
+      name: 'pf: State table maximum entries'
+      type: SNMP_AGENT
+      snmp_oid: get[1.3.6.1.4.1.12325.1.200.1.5.1.0]
+      key: pf.states.limit
+      description: pfStateLimit — maximum allowed entries in the pf state table.
+      delay: 1h
+      history: 1w
+      value_type: UNSIGNED
+      preprocessing:
+      - type: DISCARD_UNCHANGED_HEARTBEAT
+        parameters:
+        - 6h
+      tags:
+      - tag: component
+        value: firewall
+    - uuid: 044ce380d6b3424a95c2f2a90c2e42ce
+      name: 'pf: State table utilization'
+      type: CALCULATED
+      key: pf.states.util
+      description: Calculated percentage of pf state table in use.
+      delay: '60'
+      history: 1w
+      value_type: FLOAT
+      units: '%'
+      params: last(/{HOST.HOST}/pf.states.current) / last(/{HOST.HOST}/pf.states.limit) * 100
+      tags:
+      - tag: component
+        value: firewall
+      triggers:
+      - uuid: 4ee21df965934061b5cdd3c7562b3051
+        expression: last(/pfSense by SNMP/pf.states.util)>{$PF.STATE.UTIL.CRIT}
+        name: 'pfSense: pf state table critically full'
+        opdata: 'Used: {ITEM.LASTVALUE1}'
+        priority: HIGH
+        description: pf state table utilization exceeds {$PF.STATE.UTIL.CRIT}%. New connections may be dropped.
+        tags:
+        - tag: scope
+          value: capacity
+      - uuid: 148af7a79b994f1daf1fbeab59a5cbf2
+        expression: last(/pfSense by SNMP/pf.states.util)>{$PF.STATE.UTIL.WARN}
+        name: 'pfSense: pf state table high utilization'
+        opdata: 'Used: {ITEM.LASTVALUE1}'
+        priority: AVERAGE
+        dependencies:
+        - name: 'pfSense: pf state table critically full'
+          expression: last(/pfSense by SNMP/pf.states.util)>{$PF.STATE.UTIL.CRIT}
+        tags:
+        - tag: scope
+          value: capacity
+    - uuid: f4682debb07b4a3f99c0d1aa41a0ee04
+      name: 'pf: Source nodes'
+      type: SNMP_AGENT
+      snmp_oid: get[1.3.6.1.4.1.12325.1.200.1.4.1.0]
+      key: pf.src.nodes
+      description: pfSrcNodes — number of tracked source nodes (used for sticky-address and source-hash rules).
+      delay: '60'
+      history: 1w
+      value_type: UNSIGNED
+      tags:
+      - tag: component
+        value: firewall
+    - uuid: a259f7599ea3436aaba24f0e8a10b71d
+      name: 'pf: New connections rate'
+      type: SNMP_AGENT
+      snmp_oid: get[1.3.6.1.4.1.12325.1.200.1.3.3.0]
+      key: pf.states.inserts.rate
+      description: pfStateTableInserts — new states created per second (new connections).
+      delay: '60'
+      history: 1w
+      value_type: FLOAT
+      units: cps
+      preprocessing:
+      - type: CHANGE_PER_SECOND
+        parameters:
+        - ''
+      tags:
+      - tag: component
+        value: firewall
+    - uuid: 6941634c2909456bb17b3765558dd6f2
+      name: 'pf: Closed connections rate'
+      type: SNMP_AGENT
+      snmp_oid: get[1.3.6.1.4.1.12325.1.200.1.3.4.0]
+      key: pf.states.removals.rate
+      description: pfStateTableRemovals — states removed per second (closed connections).
+      delay: '60'
+      history: 1w
+      value_type: FLOAT
+      units: cps
+      preprocessing:
+      - type: CHANGE_PER_SECOND
+        parameters:
+        - ''
+      tags:
+      - tag: component
+        value: firewall
+    - uuid: 088fe790210e4d29b646a897040533ba
+      name: 'pf: Memory drops'
+      type: SNMP_AGENT
+      snmp_oid: get[1.3.6.1.4.1.12325.1.200.1.2.6.0]
+      key: pf.counter.memdrop.rate
+      description: pfCounterMemDrop — packets dropped per second due to memory limits.
+      delay: '60'
+      history: 1w
+      value_type: FLOAT
+      units: pps
+      preprocessing:
+      - type: CHANGE_PER_SECOND
+        parameters:
+        - ''
+      tags:
+      - tag: component
+        value: firewall
+      triggers:
+      - uuid: 877b9d1d4ce34459821dff33b31c7b94
+        expression: min(/pfSense by SNMP/pf.counter.memdrop.rate,5m)>0
+        name: 'pfSense: pf dropping packets due to memory limits'
+        opdata: 'Rate: {ITEM.LASTVALUE1}'
+        priority: HIGH
+        description: pf is discarding packets because memory limits are reached. Check state table size and system RAM.
+        tags:
+        - tag: scope
+          value: capacity
+    - uuid: 05bea1c260b340b09e2636e3a04353c4
+      name: 'pf: IPv4 inbound packets passed'
+      type: SNMP_AGENT
+      snmp_oid: get[1.3.6.1.4.1.12325.1.200.1.7.4.0]
+      key: pf.log.ip4.in.pass.rate
+      description: pfLogInterfaceIp4PktsInPass — IPv4 inbound packets passed by pf rules per second.
+      delay: '60'
+      history: 1w
+      value_type: FLOAT
+      units: pps
+      preprocessing:
+      - type: CHANGE_PER_SECOND
+        parameters:
+        - ''
+      tags:
+      - tag: component
+        value: firewall
+    - uuid: 34dd507b093f465e8889d7b3516d4214
+      name: 'pf: IPv4 inbound packets dropped'
+      type: SNMP_AGENT
+      snmp_oid: get[1.3.6.1.4.1.12325.1.200.1.7.5.0]
+      key: pf.log.ip4.in.drop.rate
+      description: pfLogInterfaceIp4PktsInDrop — IPv4 inbound packets dropped by pf rules per second.
+      delay: '60'
+      history: 1w
+      value_type: FLOAT
+      units: pps
+      preprocessing:
+      - type: CHANGE_PER_SECOND
+        parameters:
+        - ''
+      tags:
+      - tag: component
+        value: firewall
+      triggers:
+      - uuid: 69d43a58cb214979a220200a9f3c6bf7
+        expression: avg(/pfSense by SNMP/pf.log.ip4.in.drop.rate,5m)>100
+        name: 'pfSense: High inbound packet drop rate'
+        opdata: 'Dropped/s: {ITEM.LASTVALUE1}'
+        priority: WARNING
+        description: pf is dropping more than 100 packets/s inbound. Possible DDoS or misconfigured rule.
+        tags:
+        - tag: scope
+          value: security
+    - uuid: 414b6530d50a4d7aad53a707d5ca0c54
+      name: 'pf: IPv4 outbound packets passed'
+      type: SNMP_AGENT
+      snmp_oid: get[1.3.6.1.4.1.12325.1.200.1.7.6.0]
+      key: pf.log.ip4.out.pass.rate
+      description: pfLogInterfaceIp4PktsOutPass — IPv4 outbound packets passed by pf rules per second.
+      delay: '60'
+      history: 1w
+      value_type: FLOAT
+      units: pps
+      preprocessing:
+      - type: CHANGE_PER_SECOND
+        parameters:
+        - ''
+      tags:
+      - tag: component
+        value: firewall
+    - uuid: 4d6e284c25214ec8901ef62da7803de1
+      name: 'pf: IPv4 outbound packets dropped'
+      type: SNMP_AGENT
+      snmp_oid: get[1.3.6.1.4.1.12325.1.200.1.7.7.0]
+      key: pf.log.ip4.out.drop.rate
+      description: pfLogInterfaceIp4PktsOutDrop — IPv4 outbound packets dropped by pf rules per second.
+      delay: '60'
+      history: 1w
+      value_type: FLOAT
+      units: pps
+      preprocessing:
+      - type: CHANGE_PER_SECOND
+        parameters:
+        - ''
+      tags:
+      - tag: component
+        value: firewall
+    - uuid: d6501a8fe47b4a2ab33256997a47a563
+      name: 'pf: Rule-matched packets rate'
+      type: SNMP_AGENT
+      snmp_oid: get[1.3.6.1.4.1.12325.1.200.1.2.1.0]
+      key: pf.counter.match.rate
+      description: pfCounterMatch — packets per second that matched any pf rule.
+      delay: '60'
+      history: 1w
+      value_type: FLOAT
+      units: pps
+      preprocessing:
+      - type: CHANGE_PER_SECOND
+        parameters:
+        - ''
+      tags:
+      - tag: component
+        value: firewall
+    - uuid: 3449a90610f844ec941d44d332761b7f
+      name: 'pf: Bad offset packets rate'
+      type: SNMP_AGENT
+      snmp_oid: get[1.3.6.1.4.1.12325.1.200.1.2.2.0]
+      key: pf.counter.badoffset.rate
+      description: pfCounterBadOffset — malformed packets with bad offset per second.
+      delay: '60'
+      history: 1w
+      value_type: FLOAT
+      units: pps
+      preprocessing:
+      - type: CHANGE_PER_SECOND
+        parameters:
+        - ''
+      tags:
+      - tag: component
+        value: firewall
+      triggers:
+      - uuid: f1e5b0ba99e84edf9f1ddb1e205d33a2
+        expression: avg(/pfSense by SNMP/pf.counter.badoffset.rate,5m)>0
+        name: 'pfSense: Malformed packets detected (bad offset)'
+        priority: WARNING
+        description: pf is receiving malformed packets with bad offset. May indicate network issues or a scan/attack.
+        tags:
+        - tag: scope
+          value: security
+    - uuid: 32cc1a5961fe46bbaade632536458388
+      name: 'pf: Fragmented packets rate'
+      type: SNMP_AGENT
+      snmp_oid: get[1.3.6.1.4.1.12325.1.200.1.2.3.0]
+      key: pf.counter.fragment.rate
+      description: pfCounterFragment — fragmented packets per second processed by pf.
+      delay: '60'
+      history: 1w
+      value_type: FLOAT
+      units: pps
+      preprocessing:
+      - type: CHANGE_PER_SECOND
+        parameters:
+        - ''
+      tags:
+      - tag: component
+        value: firewall
+    - uuid: 2b6c0b3178684396b42fc71330272dc4
+      name: 'pf: Short packets rate'
+      type: SNMP_AGENT
+      snmp_oid: get[1.3.6.1.4.1.12325.1.200.1.2.4.0]
+      key: pf.counter.short.rate
+      description: pfCounterShort — packets too short for their IP header per second.
+      delay: '60'
+      history: 1w
+      value_type: FLOAT
+      units: pps
+      preprocessing:
+      - type: CHANGE_PER_SECOND
+        parameters:
+        - ''
+      tags:
+      - tag: component
+        value: firewall
+    - uuid: d1b0e0be552d4b52b8d69fb1088ddf23
+      name: System load average (1 min)
+      type: SNMP_AGENT
+      snmp_oid: get[1.3.6.1.4.1.2021.10.1.5.1]
+      key: system.load.avg1
+      description: laLoadInt — 1-minute load average × 100. Divided by 100 to get actual value.
+      delay: '60'
+      history: 1w
+      value_type: FLOAT
+      preprocessing:
+      - type: MULTIPLIER
+        parameters:
+        - '0.01'
+      tags:
+      - tag: component
+        value: cpu
+    - uuid: 49d09c10f81e440b9d1fca77e59c9fc6
+      name: System load average (5 min)
+      type: SNMP_AGENT
+      snmp_oid: get[1.3.6.1.4.1.2021.10.1.5.2]
+      key: system.load.avg5
+      description: laLoadInt — 5-minute load average × 100. Divided by 100 to get actual value.
+      delay: '60'
+      history: 1w
+      value_type: FLOAT
+      preprocessing:
+      - type: MULTIPLIER
+        parameters:
+        - '0.01'
+      tags:
+      - tag: component
+        value: cpu
+      triggers:
+      - uuid: 407c1bdf2e064dd0ae1a45994e16ee60
+        expression: avg(/pfSense by SNMP/system.load.avg5,15m)>{$LOAD.AVG.WARN}
+        name: 'pfSense: High system load average'
+        priority: WARNING
+        description: 5-minute load average has been above {$LOAD.AVG.WARN} for 15 minutes.
+        tags:
+        - tag: scope
+          value: performance
+    - uuid: 8c09db290ebe4f0a8026cd3fb70b7f56
+      name: System load average (15 min)
+      type: SNMP_AGENT
+      snmp_oid: get[1.3.6.1.4.1.2021.10.1.5.3]
+      key: system.load.avg15
+      description: laLoadInt — 15-minute load average × 100. Divided by 100 to get actual value.
+      delay: '60'
+      history: 1w
+      value_type: FLOAT
+      preprocessing:
+      - type: MULTIPLIER
+        parameters:
+        - '0.01'
+      tags:
+      - tag: component
+        value: cpu
+    - uuid: f9834d2208ed45df9282fb546f9cd2dc
+      name: CPU utilization
+      type: SNMP_AGENT
+      snmp_oid: get[1.3.6.1.4.1.2021.11.11.0]
+      key: system.cpu.util
+      description: ssCpuIdle (UCD-SNMP) — aggregate CPU idle percentage across all cores, converted to utilization (100 - idle).
+      delay: '60'
+      history: 1w
+      value_type: FLOAT
+      units: '%'
+      preprocessing:
+      - type: JAVASCRIPT
+        parameters:
+        - return 100 - value;
+      tags:
+      - tag: component
+        value: cpu
+      triggers:
+      - uuid: acc7e013012449cd9ff951a125ee1a4c
+        expression: min(/pfSense by SNMP/system.cpu.util,5m)>{$CPU.UTIL.CRIT}
+        name: 'pfSense: CPU utilization is critically high'
+        opdata: 'CPU: {ITEM.LASTVALUE1}'
+        priority: HIGH
+        description: CPU utilization has been above {$CPU.UTIL.CRIT}% for 5 minutes.
+        tags:
+        - tag: scope
+          value: performance
+      - uuid: 4d4e7af9f2f74723b0acdbf2da4f1361
+        expression: min(/pfSense by SNMP/system.cpu.util,5m)>{$CPU.UTIL.WARN}
+        name: 'pfSense: High CPU utilization'
+        opdata: 'CPU: {ITEM.LASTVALUE1}'
+        priority: WARNING
+        description: CPU utilization has been above {$CPU.UTIL.WARN}% for 5 minutes.
+        dependencies:
+        - name: 'pfSense: CPU utilization is critically high'
+          expression: min(/pfSense by SNMP/system.cpu.util,5m)>{$CPU.UTIL.CRIT}
+        tags:
+        - tag: scope
+          value: performance
+    - uuid: f3bcc18955ca44f6adac32eafb7e9262
+      name: Memory available
+      type: SNMP_AGENT
+      snmp_oid: get[1.3.6.1.4.1.2021.4.6.0]
+      key: vm.memory.available
+      description: memAvailReal — available real memory in KB, converted to bytes. Includes free memory that can be used immediately.
+      delay: '60'
+      history: 1w
+      value_type: UNSIGNED
+      units: B
+      preprocessing:
+      - type: MULTIPLIER
+        parameters:
+        - '1024'
+      tags:
+      - tag: component
+        value: memory
+    - uuid: 127ff0190e87462089a3f05c9995c1db
+      name: Memory utilization
+      type: CALCULATED
+      key: vm.memory.util
+      description: Memory utilization calculated from UCD-SNMP memTotalReal and memAvailReal.
+      delay: '60'
+      history: 1w
+      value_type: FLOAT
+      units: '%'
+      params: (last(/{HOST.HOST}/vm.memory.total) - last(/{HOST.HOST}/vm.memory.available)) / last(/{HOST.HOST}/vm.memory.total) * 100
+      tags:
+      - tag: component
+        value: memory
+      triggers:
+      - uuid: f02782e78037493f8a3ceee9a8ea1800
+        expression: min(/pfSense by SNMP/vm.memory.util,5m)>{$MEMORY.UTIL.MAX}
+        name: 'pfSense: High memory utilization'
+        priority: WARNING
+        description: Memory utilization has been above {$MEMORY.UTIL.MAX}% for 5 minutes.
+        tags:
+        - tag: scope
+          value: capacity
+    - uuid: a08b42a544df408387236a2f03df4367
+      name: Memory cached
+      type: SNMP_AGENT
+      snmp_oid: get[1.3.6.1.4.1.2021.4.15.0]
+      key: vm.memory.cached
+      description: memCached — cached memory in KB, converted to bytes.
+      delay: '60'
+      history: 1w
+      value_type: UNSIGNED
+      units: B
+      preprocessing:
+      - type: MULTIPLIER
+        parameters:
+        - '1024'
+      tags:
+      - tag: component
+        value: memory
+    - uuid: 2515f87854374ac2a156095b69c80943
+      name: Memory buffers
+      type: SNMP_AGENT
+      snmp_oid: get[1.3.6.1.4.1.2021.4.14.0]
+      key: vm.memory.buffers
+      description: memBuffer — buffer memory in KB, converted to bytes.
+      delay: '60'
+      history: 1w
+      value_type: UNSIGNED
+      units: B
+      preprocessing:
+      - type: MULTIPLIER
+        parameters:
+        - '1024'
+      tags:
+      - tag: component
+        value: memory
+    - uuid: 45924e7dd84e41bea8124f886e115997
+      name: Memory shared
+      type: SNMP_AGENT
+      snmp_oid: get[1.3.6.1.4.1.2021.4.13.0]
+      key: vm.memory.shared
+      description: memShared (UCD-SNMP) — shared memory in KB, converted to bytes.
+      delay: '60'
+      history: 1w
+      value_type: UNSIGNED
+      units: B
+      preprocessing:
+      - type: MULTIPLIER
+        parameters:
+        - '1024'
+      tags:
+      - tag: component
+        value: memory
+    - uuid: 14e1d1d55d964a61af59a483df0b4c21
+      name: Total memory
+      type: SNMP_AGENT
+      snmp_oid: get[1.3.6.1.2.1.25.2.2.0]
+      key: vm.memory.total
+      description: hrMemorySize — total installed RAM in KB, converted to bytes.
+      delay: 1h
+      history: 1w
+      value_type: UNSIGNED
+      units: B
+      preprocessing:
+      - type: MULTIPLIER
+        parameters:
+        - '1024'
+      - type: DISCARD_UNCHANGED_HEARTBEAT
+        parameters:
+        - 6h
+      tags:
+      - tag: component
+        value: memory
+    - uuid: 99ed881f74674787998c1245fbdf60ed
+      name: Swap total
+      type: SNMP_AGENT
+      snmp_oid: get[1.3.6.1.4.1.2021.4.3.0]
+      key: vm.memory.swap.total
+      description: memTotalSwap (UCD-SNMP) — total configured swap space in KB, converted to bytes.
+      delay: 1h
+      history: 1w
+      value_type: UNSIGNED
+      units: B
+      preprocessing:
+      - type: MULTIPLIER
+        parameters:
+        - '1024'
+      - type: DISCARD_UNCHANGED_HEARTBEAT
+        parameters:
+        - 6h
+      tags:
+      - tag: component
+        value: memory
+    - uuid: 90ac93d6164e45e08fb63ab4efb407b5
+      name: Swap free
+      type: SNMP_AGENT
+      snmp_oid: get[1.3.6.1.4.1.2021.4.4.0]
+      key: vm.memory.swap.free
+      description: memAvailSwap (UCD-SNMP) — available swap space in KB, converted to bytes.
+      delay: '60'
+      history: 1w
+      value_type: UNSIGNED
+      units: B
+      preprocessing:
+      - type: MULTIPLIER
+        parameters:
+        - '1024'
+      tags:
+      - tag: component
+        value: memory
+    - uuid: 3a42a26b2b2843979499b16d003ef6d7
+      name: Swap utilization
+      type: CALCULATED
+      key: vm.memory.swap.util
+      description: Swap space utilization calculated from memTotalSwap and memAvailSwap.
+      delay: '60'
+      history: 1w
+      value_type: FLOAT
+      units: '%'
+      params: (last(/{HOST.HOST}/vm.memory.swap.total) - last(/{HOST.HOST}/vm.memory.swap.free)) / last(/{HOST.HOST}/vm.memory.swap.total) * 100
+      tags:
+      - tag: component
+        value: memory
+      triggers:
+      - uuid: 3e5cbf5a1e6c42b490e2bf6b2f161725
+        expression: min(/pfSense by SNMP/vm.memory.swap.util,5m)>{$MEMORY.SWAP.WARN}
+        name: 'pfSense: High swap utilization'
+        opdata: 'Swap used: {ITEM.LASTVALUE1}'
+        priority: WARNING
+        description: Swap utilization has been above {$MEMORY.SWAP.WARN}% for 5 minutes. System is under memory pressure.
+        tags:
+        - tag: scope
+          value: capacity
+    - uuid: 2941a07e17054a208af8c8f5c0e22cbf
+      name: System contact
+      type: SNMP_AGENT
+      snmp_oid: get[1.3.6.1.2.1.1.4.0]
+      key: system.contact
+      description: sysContact — administrator contact info.
+      delay: 1h
+      history: 1w
+      trends: '0'
+      value_type: CHAR
+      preprocessing:
+      - type: DISCARD_UNCHANGED_HEARTBEAT
+        parameters:
+        - 1d
+      tags:
+      - tag: component
+        value: system
+    - uuid: 51a5c127fe7c4c3aa0b34d09c30070f1
+      name: IP forwarding
+      type: SNMP_AGENT
+      snmp_oid: get[1.3.6.1.2.1.4.1.0]
+      key: system.ipforward
+      description: ipForwarding (MIB-II) — whether this system is acting as an IP router. 1=forwarding, 2=notForwarding.
+      delay: '60'
+      history: 1w
+      value_type: UNSIGNED
+      valuemap:
+        name: pfSense IP forwarding
+      preprocessing:
+      - type: DISCARD_UNCHANGED_HEARTBEAT
+        parameters:
+        - 6h
+      tags:
+      - tag: component
+        value: system
+      triggers:
+      - uuid: f6a22c68427748d191becd3081a2af59
+        expression: last(/pfSense by SNMP/system.ipforward)<>1
+        name: 'pfSense: IP forwarding is disabled'
+        priority: DISASTER
+        description: IP forwarding (routing) is not enabled. pfSense cannot forward packets between interfaces.
+        manual_close: 'YES'
+        tags:
+        - tag: scope
+          value: availability
+    - uuid: d82fcce9cd4749ac8ec44eb1f7737189
+      name: Logged-in users
+      type: SNMP_AGENT
+      snmp_oid: get[1.3.6.1.2.1.25.1.5.0]
+      key: system.users.num
+      description: hrSystemNumUsers — number of users currently logged in.
+      delay: '60'
+      history: 1w
+      value_type: UNSIGNED
+      tags:
+      - tag: component
+        value: system
+      triggers:
+      - uuid: cc95f7c7a46142cd9fc5eb52e6ade7f2
+        expression: last(/pfSense by SNMP/system.users.num)>{$SYSTEM.USERS.MAX}
+        name: 'pfSense: User logged in'
+        opdata: 'Users: {ITEM.LASTVALUE1}'
+        priority: WARNING
+        description: A user is logged in to the pfSense system. Verify this is expected.
+        manual_close: 'YES'
+        tags:
+        - tag: scope
+          value: security
+    - uuid: ea57ba79420c42c7ac0ea91685d4d0c4
+      name: Running processes
+      type: SNMP_AGENT
+      snmp_oid: get[1.3.6.1.2.1.25.1.6.0]
+      key: system.processes.num
+      description: hrSystemProcesses — number of running processes.
+      delay: '60'
+      history: 1w
+      value_type: UNSIGNED
+      tags:
+      - tag: component
+        value: system
+    - uuid: 838f2472b66f4d9ba0ce1e8023c92d67
+      name: 'TCP: Current established connections'
+      type: SNMP_AGENT
+      snmp_oid: get[1.3.6.1.2.1.6.9.0]
+      key: tcp.curr.estab
+      description: tcpCurrEstab — number of TCP connections currently in ESTABLISHED or CLOSE_WAIT state.
+      delay: '60'
+      history: 1w
+      value_type: UNSIGNED
+      tags:
+      - tag: component
+        value: network
+      triggers:
+      - uuid: c17861ab52b64c44958e3e710f9bff11
+        expression: last(/pfSense by SNMP/tcp.curr.estab)>{$TCP.ESTAB.MAX}
+        name: 'pfSense: High number of TCP established connections'
+        opdata: 'Current: {ITEM.LASTVALUE1}'
+        priority: WARNING
+        description: Number of established TCP connections exceeds {$TCP.ESTAB.MAX}.
+        tags:
+        - tag: scope
+          value: capacity
+    - uuid: 1c5a3afb885b45bb911d4ef0e39c23a5
+      name: 'TCP: Segment send rate'
+      type: SNMP_AGENT
+      snmp_oid: get[1.3.6.1.2.1.6.11.0]
+      key: tcp.out.segs.rate
+      description: tcpOutSegs — TCP segments sent per second.
+      delay: '60'
+      history: 1w
+      value_type: FLOAT
+      units: ps
+      preprocessing:
+      - type: CHANGE_PER_SECOND
+        parameters:
+        - ''
+      tags:
+      - tag: component
+        value: network
+    - uuid: da1359a6eecb42928d83165b10720f4c
+      name: 'TCP: Segment receive rate'
+      type: SNMP_AGENT
+      snmp_oid: get[1.3.6.1.2.1.6.10.0]
+      key: tcp.in.segs.rate
+      description: tcpInSegs — TCP segments received per second.
+      delay: '60'
+      history: 1w
+      value_type: FLOAT
+      units: ps
+      preprocessing:
+      - type: CHANGE_PER_SECOND
+        parameters:
+        - ''
+      tags:
+      - tag: component
+        value: network
+    - uuid: 6680a217013e4d0598c79670aafa1704
+      name: 'TCP: Retransmit rate'
+      type: SNMP_AGENT
+      snmp_oid: get[1.3.6.1.2.1.6.12.0]
+      key: tcp.retrans.rate
+      description: tcpRetransSegs — TCP segments retransmitted per second. High values indicate network issues.
+      delay: '60'
+      history: 1w
+      value_type: FLOAT
+      units: ps
+      preprocessing:
+      - type: CHANGE_PER_SECOND
+        parameters:
+        - ''
+      tags:
+      - tag: component
+        value: network
+      triggers:
+      - uuid: c4bc269ff63245a88ac42c0c7db76c11
+        expression: avg(/pfSense by SNMP/tcp.retrans.rate,5m)>10
+        name: 'pfSense: High TCP retransmit rate'
+        opdata: 'Rate: {ITEM.LASTVALUE1}/s'
+        priority: WARNING
+        description: TCP retransmit rate is elevated. May indicate packet loss or network congestion.
+        tags:
+        - tag: scope
+          value: performance
+    - uuid: 4ef65866f7fc495c8aebf2b65b2d98af
+      name: 'TCP: Connection attempt failures rate'
+      type: SNMP_AGENT
+      snmp_oid: get[1.3.6.1.2.1.6.7.0]
+      key: tcp.attempt.fails.rate
+      description: tcpAttemptFails — failed TCP connection attempts per second. High values may indicate a port scan or SYN flood.
+      delay: '60'
+      history: 1w
+      value_type: FLOAT
+      units: ps
+      preprocessing:
+      - type: CHANGE_PER_SECOND
+        parameters:
+        - ''
+      tags:
+      - tag: component
+        value: network
+      triggers:
+      - uuid: 417505e936594ec79a89f2f73076b112
+        expression: avg(/pfSense by SNMP/tcp.attempt.fails.rate,5m)>50
+        name: 'pfSense: High TCP connection failure rate'
+        opdata: 'Rate: {ITEM.LASTVALUE1}/s'
+        priority: WARNING
+        description: TCP connection attempt failure rate is high. May indicate a port scan or SYN flood attack.
+        tags:
+        - tag: scope
+          value: security
+    - uuid: b61ca7308d9a49a7a285cdb7ed308346
+      name: 'TCP: Established connection resets rate'
+      type: SNMP_AGENT
+      snmp_oid: get[1.3.6.1.2.1.6.8.0]
+      key: tcp.estab.resets.rate
+      description: tcpEstabResets — established TCP connections reset per second.
+      delay: '60'
+      history: 1w
+      value_type: FLOAT
+      units: ps
+      preprocessing:
+      - type: CHANGE_PER_SECOND
+        parameters:
+        - ''
+      tags:
+      - tag: component
+        value: network
+    - uuid: 8c4fd508b8eb4741b495dc0523d8450f
+      name: 'UDP: Input errors rate'
+      type: SNMP_AGENT
+      snmp_oid: get[1.3.6.1.2.1.7.3.0]
+      key: udp.in.errors.rate
+      description: udpInErrors — UDP datagrams that could not be delivered per second.
+      delay: '60'
+      history: 1w
+      value_type: FLOAT
+      units: ps
+      preprocessing:
+      - type: CHANGE_PER_SECOND
+        parameters:
+        - ''
+      tags:
+      - tag: component
+        value: network
+      triggers:
+      - uuid: 1e0e681ed15e434688d065d65fb7e5bf
+        expression: avg(/pfSense by SNMP/udp.in.errors.rate,5m)>10
+        name: 'pfSense: Elevated UDP input error rate'
+        opdata: 'Rate: {ITEM.LASTVALUE1}/s'
+        priority: WARNING
+        description: UDP input error rate is elevated. Packets are being dropped.
+        tags:
+        - tag: scope
+          value: performance
+    - uuid: 82ebbf2d4ac74bf8b1b7fcaa3f0f1b54
+      name: 'IP: Forwarded datagrams rate'
+      type: SNMP_AGENT
+      snmp_oid: get[1.3.6.1.2.1.4.6.0]
+      key: ip.forw.datagrams.rate
+      description: ipForwDatagrams — IP datagrams forwarded per second (routing traffic through pfSense).
+      delay: '60'
+      history: 1w
+      value_type: FLOAT
+      units: pps
+      preprocessing:
+      - type: CHANGE_PER_SECOND
+        parameters:
+        - ''
+      tags:
+      - tag: component
+        value: network
+    - uuid: b067b2323db94099b10f2c1e4ec5e199
+      name: 'IP: Inbound discards rate'
+      type: SNMP_AGENT
+      snmp_oid: get[1.3.6.1.2.1.4.8.0]
+      key: ip.in.discards.rate
+      description: ipInDiscards — inbound IP datagrams discarded per second despite no errors (e.g. buffer overflow).
+      delay: '60'
+      history: 1w
+      value_type: FLOAT
+      units: pps
+      preprocessing:
+      - type: CHANGE_PER_SECOND
+        parameters:
+        - ''
+      tags:
+      - tag: component
+        value: network
+      triggers:
+      - uuid: 1ee7ab8f8c7d4c71a99963419eee1966
+        expression: avg(/pfSense by SNMP/ip.in.discards.rate,5m)>0
+        name: 'pfSense: IP inbound datagrams being discarded'
+        opdata: 'Rate: {ITEM.LASTVALUE1}/s'
+        priority: WARNING
+        description: IP datagrams are being discarded on inbound. May indicate buffer overflow or resource exhaustion.
+        tags:
+        - tag: scope
+          value: performance
+    - uuid: f84dc194ea2e43a194ac43e1a2c81324
+      name: 'pf: Normalized packets rate'
+      type: SNMP_AGENT
+      snmp_oid: get[1.3.6.1.4.1.12325.1.200.1.2.5.0]
+      key: pf.counter.normalize.rate
+      description: pfCounterNormalize — packets normalized (scrubbed) per second by pf.
+      delay: '60'
+      history: 1w
+      value_type: FLOAT
+      units: pps
+      preprocessing:
+      - type: CHANGE_PER_SECOND
+        parameters:
+        - ''
+      tags:
+      - tag: component
+        value: firewall
+    discovery_rules:
+    - uuid: 8c344831467241378fb53757dd10f5b1
+      name: Network interfaces discovery
+      type: SNMP_AGENT
+      snmp_oid: discovery[{#SNMPVALUE},1.3.6.1.2.1.2.2.1.2]
+      key: net.if.discovery
+      delay: 1h
+      filter:
+        evaltype: AND
+        conditions:
+        - macro: '{#SNMPVALUE}'
+          value: '{$NET.IF.IFNAME.MATCHES}'
+          operator: MATCHES_REGEX
+          formulaid: A
+        - macro: '{#SNMPVALUE}'
+          value: '{$NET.IF.IFNAME.NOT_MATCHES}'
+          operator: NOT_MATCHES_REGEX
+          formulaid: B
+      description: Discovers network interfaces via IF-MIB ifDescr walk. Excludes pflog, pfsync, enc, lo by default.
+      item_prototypes:
+      - uuid: 77ad791b3a0449eea04f14fcabb3cf6d
+        name: 'Interface {#SNMPVALUE}: Admin status'
+        type: SNMP_AGENT
+        snmp_oid: get[1.3.6.1.2.1.2.2.1.7.{#SNMPINDEX}]
+        key: net.if.admin.status[{#SNMPVALUE}]
+        description: ifAdminStatus — 1=up, 2=down, 3=testing.
+        delay: '60'
+        history: 1w
+        value_type: UNSIGNED
+        valuemap:
+          name: IF-MIB::ifAdminStatus
+        tags:
+        - tag: component
+          value: interface
+        - tag: interface
+          value: '{#SNMPVALUE}'
+      - uuid: 7df739182be740faa23d6290f7e668dc
+        name: 'Interface {#SNMPVALUE}: Operational status'
+        type: SNMP_AGENT
+        snmp_oid: get[1.3.6.1.2.1.2.2.1.8.{#SNMPINDEX}]
+        key: net.if.oper.status[{#SNMPVALUE}]
+        description: ifOperStatus — 1=up, 2=down, 3=testing, 4=unknown, 5=dormant, 6=notPresent, 7=lowerLayerDown.
+        delay: '60'
+        history: 1w
+        value_type: UNSIGNED
+        valuemap:
+          name: IF-MIB::ifOperStatus
+        tags:
+        - tag: component
+          value: interface
+        - tag: interface
+          value: '{#SNMPVALUE}'
+        trigger_prototypes:
+        - uuid: 64a292bb55e3442183c5abca6ce95726
+          expression: last(/pfSense by SNMP/net.if.oper.status[{#SNMPVALUE}])<>1 and last(/pfSense by SNMP/net.if.admin.status[{#SNMPVALUE}])=1 and {$ENABLE_LINK_DOWN_ALERT:"{#SNMPVALUE}"}=1
+          name: 'Interface {#SNMPVALUE}: Link down'
+          priority: AVERAGE
+          description: Interface is administratively up but operationally down.
+          tags:
+          - tag: scope
+            value: availability
+      - uuid: 0916206023f54d30abcd81ea8a19a2da
+        name: 'Interface {#SNMPVALUE}: Inbound traffic'
+        type: SNMP_AGENT
+        snmp_oid: get[1.3.6.1.2.1.31.1.1.1.6.{#SNMPINDEX}]
+        key: net.if.in[{#SNMPVALUE}]
+        delay: '60'
+        history: 1w
+        value_type: UNSIGNED
+        units: bps
+        description: ifHCInOctets — inbound octets (Counter64), converted to bits per second.
+        preprocessing:
+        - type: CHANGE_PER_SECOND
+          parameters:
+          - ''
+        - type: MULTIPLIER
+          parameters:
+          - '8'
+        tags:
+        - tag: component
+          value: interface
+        - tag: interface
+          value: '{#SNMPVALUE}'
+        trigger_prototypes:
+        - uuid: ff634a66c51d423b90d26cce291f8bfe
+          expression: avg(/pfSense by SNMP/net.if.in[{#SNMPVALUE}],15m)/last(/pfSense by SNMP/net.if.speed[{#SNMPVALUE}])*100>{$IF.UTIL.MAX} and last(/pfSense by SNMP/net.if.speed[{#SNMPVALUE}])>0 and {$ENABLE_IF_UTIL_ALERT:"{#SNMPVALUE}"}=1
+          name: 'Interface {#SNMPVALUE}: High inbound utilization'
+          opdata: 'In: {ITEM.LASTVALUE1}'
+          priority: WARNING
+          description: Inbound bandwidth utilization on {#SNMPVALUE} exceeds {$IF.UTIL.MAX}% of line speed for 15 minutes.
+          tags:
+          - tag: scope
+            value: performance
+      - uuid: 73c02a87e8664db289c1b810beceed6f
+        name: 'Interface {#SNMPVALUE}: Outbound traffic'
+        type: SNMP_AGENT
+        snmp_oid: get[1.3.6.1.2.1.31.1.1.1.10.{#SNMPINDEX}]
+        key: net.if.out[{#SNMPVALUE}]
+        delay: '60'
+        history: 1w
+        value_type: UNSIGNED
+        units: bps
+        description: ifHCOutOctets — outbound octets (Counter64), converted to bits per second.
+        preprocessing:
+        - type: CHANGE_PER_SECOND
+          parameters:
+          - ''
+        - type: MULTIPLIER
+          parameters:
+          - '8'
+        tags:
+        - tag: component
+          value: interface
+        - tag: interface
+          value: '{#SNMPVALUE}'
+        trigger_prototypes:
+        - uuid: 9029883007c64a70a608eade949e099a
+          expression: avg(/pfSense by SNMP/net.if.out[{#SNMPVALUE}],15m)/last(/pfSense by SNMP/net.if.speed[{#SNMPVALUE}])*100>{$IF.UTIL.MAX} and last(/pfSense by SNMP/net.if.speed[{#SNMPVALUE}])>0 and
+            {$ENABLE_IF_UTIL_ALERT:"{#SNMPVALUE}"}=1
+          name: 'Interface {#SNMPVALUE}: High outbound utilization'
+          opdata: 'Out: {ITEM.LASTVALUE1}'
+          priority: WARNING
+          description: Outbound bandwidth utilization on {#SNMPVALUE} exceeds {$IF.UTIL.MAX}% of line speed for 15 minutes.
+          tags:
+          - tag: scope
+            value: performance
+      - uuid: 0e2ba3ea993e46daa743ceb7a54acdcb
+        name: 'Interface {#SNMPVALUE}: Inbound errors'
+        type: SNMP_AGENT
+        snmp_oid: get[1.3.6.1.2.1.2.2.1.14.{#SNMPINDEX}]
+        key: net.if.in.errors[{#SNMPVALUE}]
+        delay: '60'
+        history: 1w
+        value_type: UNSIGNED
+        units: eps
+        description: ifInErrors — inbound packet errors per second.
+        preprocessing:
+        - type: CHANGE_PER_SECOND
+          parameters:
+          - ''
+        tags:
+        - tag: component
+          value: interface
+        - tag: interface
+          value: '{#SNMPVALUE}'
+        trigger_prototypes:
+        - uuid: 0a84e0912907493bbb081666b53f54d5
+          expression: min(/pfSense by SNMP/net.if.in.errors[{#SNMPVALUE}],5m)>{$IF.ERRORS.WARN} and {$ENABLE_IF_ERROR_ALERT:"{#SNMPVALUE}"}=1
+          name: 'Interface {#SNMPVALUE}: High inbound error rate'
+          opdata: 'Errors/s: {ITEM.LASTVALUE1}'
+          priority: WARNING
+          tags:
+          - tag: scope
+            value: performance
+      - uuid: 63cac750415d4e8f9ba6109ff2da9f6b
+        name: 'Interface {#SNMPVALUE}: Outbound errors'
+        type: SNMP_AGENT
+        snmp_oid: get[1.3.6.1.2.1.2.2.1.20.{#SNMPINDEX}]
+        key: net.if.out.errors[{#SNMPVALUE}]
+        delay: '60'
+        history: 1w
+        value_type: UNSIGNED
+        units: eps
+        description: ifOutErrors — outbound packet errors per second.
+        preprocessing:
+        - type: CHANGE_PER_SECOND
+          parameters:
+          - ''
+        tags:
+        - tag: component
+          value: interface
+        - tag: interface
+          value: '{#SNMPVALUE}'
+        trigger_prototypes:
+        - uuid: 87c7e5ad8e9c460d9f1465030772438c
+          expression: min(/pfSense by SNMP/net.if.out.errors[{#SNMPVALUE}],5m)>{$IF.ERRORS.WARN} and {$ENABLE_IF_ERROR_ALERT:"{#SNMPVALUE}"}=1
+          name: 'Interface {#SNMPVALUE}: High outbound error rate'
+          opdata: 'Errors/s: {ITEM.LASTVALUE1}'
+          priority: WARNING
+          tags:
+          - tag: scope
+            value: performance
+      - uuid: 830b09bf60644aea90112080f342ad3f
+        name: 'Interface {#SNMPVALUE}: Speed'
+        type: SNMP_AGENT
+        snmp_oid: get[1.3.6.1.2.1.31.1.1.1.15.{#SNMPINDEX}]
+        key: net.if.speed[{#SNMPVALUE}]
+        description: ifHighSpeed — interface speed in Mbps, converted to bps.
+        delay: 5m
+        history: 1w
+        value_type: UNSIGNED
+        units: bps
+        preprocessing:
+        - type: MULTIPLIER
+          parameters:
+          - '1000000'
+        - type: DISCARD_UNCHANGED_HEARTBEAT
+          parameters:
+          - 1h
+        tags:
+        - tag: component
+          value: interface
+        - tag: interface
+          value: '{#SNMPVALUE}'
+      graph_prototypes:
+      - uuid: a9bedf796f94412ba9a48d2a536708e2
+        name: 'Interface {#SNMPVALUE}: Traffic'
+        graph_items:
+        - sortorder: '0'
+          color: 1A7C11
+          calc_fnc: AVG
+          item:
+            host: pfSense by SNMP
+            key: net.if.in[{#SNMPVALUE}]
+        - sortorder: '1'
+          color: F63100
+          calc_fnc: AVG
+          item:
+            host: pfSense by SNMP
+            key: net.if.out[{#SNMPVALUE}]
+    - uuid: 3a6fcbbc57db472b99c3acb2d18d8d1f
+      name: CPU cores discovery
+      type: SNMP_AGENT
+      snmp_oid: discovery[{#SNMPVALUE},1.3.6.1.2.1.25.3.3.1.2]
+      key: cpu.discovery
+      delay: 1h
+      description: Discovers CPU cores via hrProcessorLoad table.
+      item_prototypes:
+      - uuid: 8c8e799838524933855d858045c16c8b
+        name: 'CPU core {#SNMPINDEX}: Utilization'
+        type: SNMP_AGENT
+        snmp_oid: get[1.3.6.1.2.1.25.3.3.1.2.{#SNMPINDEX}]
+        key: system.cpu.util[{#SNMPINDEX}]
+        description: hrProcessorLoad — CPU utilization for this core (%).
+        delay: '60'
+        history: 1w
+        value_type: UNSIGNED
+        units: '%'
+        tags:
+        - tag: component
+          value: cpu
+        - tag: core
+          value: '{#SNMPINDEX}'
+        trigger_prototypes:
+        - uuid: 3a75d7215e3c4d1c8ecb8d50852f1f08
+          expression: avg(/pfSense by SNMP/system.cpu.util[{#SNMPINDEX}],5m)>{$CPU.UTIL.CRIT} and {$ENABLE_CPU_CORE_ALERT}=1
+          name: 'CPU core {#SNMPINDEX}: High CPU utilization'
+          opdata: 'Current: {ITEM.LASTVALUE1}'
+          priority: HIGH
+          description: CPU utilization on core {#SNMPINDEX} exceeds {$CPU.UTIL.CRIT}% for 5 minutes.
+          tags:
+          - tag: scope
+            value: performance
+      graph_prototypes:
+      - uuid: d165c64ebdd14327964402bb8f63fc8f
+        name: 'CPU core {#SNMPINDEX}: Utilization'
+        graph_items:
+        - sortorder: '0'
+          color: FF5722
+          calc_fnc: AVG
+          item:
+            host: pfSense by SNMP
+            key: system.cpu.util[{#SNMPINDEX}]
+    - uuid: c09a49027e4d4f04a7e4e5a5f91122cf
+      name: Disk I/O discovery
+      type: SNMP_AGENT
+      snmp_oid: discovery[{#SNMPVALUE},1.3.6.1.4.1.2021.13.15.1.1.2]
+      key: disk.io.discovery
+      delay: 1h
+      description: Discovers physical disk devices via UCD-SNMP diskIOTable. Passthrough devices (pass*) are excluded.
+      filter:
+        evaltype: AND
+        conditions:
+        - macro: '{#SNMPVALUE}'
+          value: '{$DISK.IO.DEVICE.NOT_MATCHES}'
+          operator: NOT_MATCHES_REGEX
+          formulaid: A
+      item_prototypes:
+      - uuid: 1168ee8506fd419e9adaff9b20963344
+        name: 'Disk {#SNMPVALUE}: Read throughput'
+        type: SNMP_AGENT
+        snmp_oid: get[1.3.6.1.4.1.2021.13.15.1.1.12.{#SNMPINDEX}]
+        key: disk.io.read[{#SNMPVALUE}]
+        description: diskIONRead — bytes read per second from this disk device (Counter64).
+        delay: '60'
+        history: 1w
+        value_type: FLOAT
+        units: Bps
+        preprocessing:
+        - type: CHANGE_PER_SECOND
+          parameters:
+          - ''
+        tags:
+        - tag: component
+          value: storage
+      - uuid: c4c972b0cb0d4199be4e1875cbdb5509
+        name: 'Disk {#SNMPVALUE}: Write throughput'
+        type: SNMP_AGENT
+        snmp_oid: get[1.3.6.1.4.1.2021.13.15.1.1.13.{#SNMPINDEX}]
+        key: disk.io.write[{#SNMPVALUE}]
+        description: diskIONWritten — bytes written per second to this disk device (Counter64).
+        delay: '60'
+        history: 1w
+        value_type: FLOAT
+        units: Bps
+        preprocessing:
+        - type: CHANGE_PER_SECOND
+          parameters:
+          - ''
+        tags:
+        - tag: component
+          value: storage
+      graph_prototypes:
+      - uuid: 7fa538fe3d554c60bbb80a09b715dd57
+        name: 'Disk {#SNMPVALUE}: I/O throughput'
+        graph_items:
+        - sortorder: '0'
+          color: 1A7C11
+          calc_fnc: AVG
+          item:
+            host: pfSense by SNMP
+            key: disk.io.read[{#SNMPVALUE}]
+        - sortorder: '1'
+          color: E53935
+          calc_fnc: AVG
+          item:
+            host: pfSense by SNMP
+            key: disk.io.write[{#SNMPVALUE}]
+    - uuid: 1442e3ceaf2f41e69b5a74bbbc22fdb1
+      name: Storage discovery
+      type: SNMP_AGENT
+      snmp_oid: discovery[{#SNMPVALUE},1.3.6.1.2.1.25.2.3.1.3]
+      key: storage.discovery
+      delay: 1h
+      filter:
+        evaltype: AND
+        conditions:
+        - macro: '{#SNMPVALUE}'
+          value: ^(Physical memory|Swap space|/.*)$
+          operator: MATCHES_REGEX
+          formulaid: A
+      description: 'Discovers storage areas: RAM, swap and mounted filesystems.'
+      item_prototypes:
+      - uuid: f3b87e092acd4e0aa52e4ae0d9e691a1
+        name: 'Storage {#SNMPVALUE}: Allocation units'
+        type: SNMP_AGENT
+        snmp_oid: get[1.3.6.1.2.1.25.2.3.1.4.{#SNMPINDEX}]
+        key: storage.alloc.units[{#SNMPVALUE}]
+        description: hrStorageAllocationUnits — block size in bytes.
+        delay: 1h
+        history: 1w
+        value_type: UNSIGNED
+        preprocessing:
+        - type: DISCARD_UNCHANGED_HEARTBEAT
+          parameters:
+          - 6h
+        tags:
+        - tag: component
+          value: storage
+      - uuid: 08dbb075350f4192b46fabdba0697671
+        name: 'Storage {#SNMPVALUE}: Total size'
+        type: SNMP_AGENT
+        snmp_oid: get[1.3.6.1.2.1.25.2.3.1.5.{#SNMPINDEX}]
+        key: storage.total[{#SNMPVALUE}]
+        description: hrStorageSize — total size in allocation units.
+        delay: 1h
+        history: 1w
+        value_type: UNSIGNED
+        preprocessing:
+        - type: DISCARD_UNCHANGED_HEARTBEAT
+          parameters:
+          - 6h
+        tags:
+        - tag: component
+          value: storage
+      - uuid: 2814452742504e47af1b612bdfa9fff1
+        name: 'Storage {#SNMPVALUE}: Used'
+        type: SNMP_AGENT
+        snmp_oid: get[1.3.6.1.2.1.25.2.3.1.6.{#SNMPINDEX}]
+        key: storage.used[{#SNMPVALUE}]
+        description: hrStorageUsed — used allocation units.
+        delay: '60'
+        history: 1w
+        value_type: UNSIGNED
+        tags:
+        - tag: component
+          value: storage
+      - uuid: f3b2b56befb745efb48a5bb03b0a317b
+        name: 'Storage {#SNMPVALUE}: Utilization'
+        type: CALCULATED
+        key: storage.util[{#SNMPVALUE}]
+        description: Calculated storage utilization percentage.
+        delay: '60'
+        history: 1w
+        value_type: FLOAT
+        units: '%'
+        params: last(/{HOST.HOST}/storage.used[{#SNMPVALUE}]) / last(/{HOST.HOST}/storage.total[{#SNMPVALUE}]) * 100
+        tags:
+        - tag: component
+          value: storage
+        trigger_prototypes:
+        - uuid: f3b0cc29792e495887290da04bd197ee
+          expression: last(/pfSense by SNMP/storage.util[{#SNMPVALUE}])>{$STORAGE.UTIL.CRIT} and {$ENABLE_STORAGE_ALERT}=1
+          name: 'Storage {#SNMPVALUE}: Critically full'
+          opdata: 'Used: {ITEM.LASTVALUE1}'
+          priority: HIGH
+          tags:
+          - tag: scope
+            value: capacity
+        - uuid: 26586ef06f734e61999c239fc5fc0dd3
+          expression: last(/pfSense by SNMP/storage.util[{#SNMPVALUE}])>{$STORAGE.UTIL.WARN} and {$ENABLE_STORAGE_ALERT}=1
+          name: 'Storage {#SNMPVALUE}: High utilization'
+          opdata: 'Used: {ITEM.LASTVALUE1}'
+          priority: AVERAGE
+          dependencies:
+          - name: 'Storage {#SNMPVALUE}: Critically full'
+            expression: last(/pfSense by SNMP/storage.util[{#SNMPVALUE}])>{$STORAGE.UTIL.CRIT} and {$ENABLE_STORAGE_ALERT}=1
+          tags:
+          - tag: scope
+            value: capacity
+      graph_prototypes:
+      - uuid: 5ca53ee07c724803bcd7412af188048b
+        name: 'Storage {#SNMPVALUE}: Utilization'
+        graph_items:
+        - sortorder: '0'
+          color: 42A5F5
+          calc_fnc: AVG
+          item:
+            host: pfSense by SNMP
+            key: storage.util[{#SNMPVALUE}]
+    - uuid: cc64e70771b04f31939e549ef5552268
+      name: pf interfaces discovery
+      type: SNMP_AGENT
+      snmp_oid: discovery[{#SNMPVALUE},1.3.6.1.4.1.12325.1.200.1.8.2.1.2]
+      key: pf.if.discovery
+      delay: 1h
+      description: 'Discovers pf-tracked interfaces via pfInterfacesIfDescr.
+
+        Shows per-interface passed and blocked byte/packet statistics.
+
+        Requires snmp_pf.so module.
+
+        '
+      item_prototypes:
+      - uuid: 0c38743451c04596ae778d07015aa2d6
+        name: 'pf Interface {#SNMPVALUE}: IPv4 inbound bytes passed'
+        type: SNMP_AGENT
+        snmp_oid: get[1.3.6.1.4.1.12325.1.200.1.8.2.1.7.{#SNMPINDEX}]
+        key: pf.if.ip4.in.pass.bytes[{#SNMPVALUE}]
+        description: pfInterfacesIf4BytesInPass — IPv4 bytes per second passed inbound.
+        delay: '60'
+        history: 1w
+        value_type: UNSIGNED
+        units: bps
+        preprocessing:
+        - type: CHANGE_PER_SECOND
+          parameters:
+          - ''
+        - type: MULTIPLIER
+          parameters:
+          - '8'
+        tags:
+        - tag: component
+          value: firewall
+        - tag: interface
+          value: '{#SNMPVALUE}'
+      - uuid: 6a89a4f9409d4386b9fc55b8e43bb49d
+        name: 'pf Interface {#SNMPVALUE}: IPv4 inbound bytes blocked'
+        type: SNMP_AGENT
+        snmp_oid: get[1.3.6.1.4.1.12325.1.200.1.8.2.1.8.{#SNMPINDEX}]
+        key: pf.if.ip4.in.block.bytes[{#SNMPVALUE}]
+        description: pfInterfacesIf4BytesInBlock — IPv4 bytes per second blocked inbound.
+        delay: '60'
+        history: 1w
+        value_type: UNSIGNED
+        units: bps
+        preprocessing:
+        - type: CHANGE_PER_SECOND
+          parameters:
+          - ''
+        - type: MULTIPLIER
+          parameters:
+          - '8'
+        tags:
+        - tag: component
+          value: firewall
+        - tag: interface
+          value: '{#SNMPVALUE}'
+      - uuid: 5de92b1ef37d4f7ca4facfc431e60a6e
+        name: 'pf Interface {#SNMPVALUE}: IPv4 outbound bytes passed'
+        type: SNMP_AGENT
+        snmp_oid: get[1.3.6.1.4.1.12325.1.200.1.8.2.1.9.{#SNMPINDEX}]
+        key: pf.if.ip4.out.pass.bytes[{#SNMPVALUE}]
+        description: pfInterfacesIf4BytesOutPass — IPv4 bytes per second passed outbound.
+        delay: '60'
+        history: 1w
+        value_type: UNSIGNED
+        units: bps
+        preprocessing:
+        - type: CHANGE_PER_SECOND
+          parameters:
+          - ''
+        - type: MULTIPLIER
+          parameters:
+          - '8'
+        tags:
+        - tag: component
+          value: firewall
+        - tag: interface
+          value: '{#SNMPVALUE}'
+      - uuid: 5476134e8b8540a99914793c4e40b09f
+        name: 'pf Interface {#SNMPVALUE}: IPv4 outbound bytes blocked'
+        type: SNMP_AGENT
+        snmp_oid: get[1.3.6.1.4.1.12325.1.200.1.8.2.1.10.{#SNMPINDEX}]
+        key: pf.if.ip4.out.block.bytes[{#SNMPVALUE}]
+        description: pfInterfacesIf4BytesOutBlock — IPv4 bytes per second blocked outbound.
+        delay: '60'
+        history: 1w
+        value_type: UNSIGNED
+        units: bps
+        preprocessing:
+        - type: CHANGE_PER_SECOND
+          parameters:
+          - ''
+        - type: MULTIPLIER
+          parameters:
+          - '8'
+        tags:
+        - tag: component
+          value: firewall
+        - tag: interface
+          value: '{#SNMPVALUE}'
+      - uuid: 07dd920cfda14ea289c549c673bef27f
+        name: 'pf Interface {#SNMPVALUE}: IPv4 inbound packets blocked'
+        type: SNMP_AGENT
+        snmp_oid: get[1.3.6.1.4.1.12325.1.200.1.8.2.1.12.{#SNMPINDEX}]
+        key: pf.if.ip4.in.block.pkts[{#SNMPVALUE}]
+        description: pfInterfacesIf4PktsInBlock — IPv4 packets per second blocked inbound.
+        delay: '60'
+        history: 1w
+        value_type: UNSIGNED
+        units: pps
+        preprocessing:
+        - type: CHANGE_PER_SECOND
+          parameters:
+          - ''
+        tags:
+        - tag: component
+          value: firewall
+        - tag: interface
+          value: '{#SNMPVALUE}'
+        trigger_prototypes:
+        - uuid: 2b51f2c552804faf8bb7fc9746005c0e
+          expression: avg(/pfSense by SNMP/pf.if.ip4.in.block.pkts[{#SNMPVALUE}],5m)>{$PF.IF.BLOCK.WARN} and {$ENABLE_PF_BLOCK_ALERT:"{#SNMPVALUE}"}=1
+          name: 'pf Interface {#SNMPVALUE}: High inbound block rate'
+          opdata: 'Blocked/s: {ITEM.LASTVALUE1}'
+          priority: WARNING
+          description: pf is blocking more than {$PF.IF.BLOCK.WARN} packets/s inbound on {#SNMPVALUE}.
+          tags:
+          - tag: scope
+            value: security
+      - uuid: ab954981fccd47088ec19a7f2c15e442
+        name: 'pf Interface {#SNMPVALUE}: IPv4 outbound packets blocked'
+        type: SNMP_AGENT
+        snmp_oid: get[1.3.6.1.4.1.12325.1.200.1.8.2.1.14.{#SNMPINDEX}]
+        key: pf.if.ip4.out.block.pkts[{#SNMPVALUE}]
+        delay: '60'
+        history: 1w
+        value_type: UNSIGNED
+        units: pps
+        description: pfInterfacesIf4PktsOutBlock — IPv4 packets per second blocked outbound.
+        preprocessing:
+        - type: CHANGE_PER_SECOND
+          parameters:
+          - ''
+        tags:
+        - tag: component
+          value: firewall
+        - tag: interface
+          value: '{#SNMPVALUE}'
+        trigger_prototypes:
+        - uuid: 0495a3875fe1425284d738fa6906dd20
+          expression: avg(/pfSense by SNMP/pf.if.ip4.out.block.pkts[{#SNMPVALUE}],5m)>{$PF.IF.BLOCK.WARN} and {$ENABLE_PF_BLOCK_ALERT:"{#SNMPVALUE}"}=1
+          name: 'pf Interface {#SNMPVALUE}: High outbound block rate'
+          opdata: 'Blocked/s: {ITEM.LASTVALUE1}'
+          priority: WARNING
+          description: pf is blocking more than {$PF.IF.BLOCK.WARN} packets/s outbound on {#SNMPVALUE}.
+          tags:
+          - tag: scope
+            value: security
+      graph_prototypes:
+      - uuid: 705ec0acdab24da791bec5971baa7ce7
+        name: 'pf Interface {#SNMPVALUE}: Passed vs Blocked (inbound)'
+        graph_items:
+        - sortorder: '0'
+          color: 1A7C11
+          calc_fnc: AVG
+          item:
+            host: pfSense by SNMP
+            key: pf.if.ip4.in.pass.bytes[{#SNMPVALUE}]
+        - sortorder: '1'
+          color: E53935
+          calc_fnc: AVG
+          item:
+            host: pfSense by SNMP
+            key: pf.if.ip4.in.block.bytes[{#SNMPVALUE}]
+      - uuid: 650a1bf08978439bbf2a140cb265ab8c
+        name: 'pf Interface {#SNMPVALUE}: Passed vs Blocked (outbound)'
+        graph_items:
+        - sortorder: '0'
+          color: 1A7C11
+          calc_fnc: AVG
+          item:
+            host: pfSense by SNMP
+            key: pf.if.ip4.out.pass.bytes[{#SNMPVALUE}]
+        - sortorder: '1'
+          color: E53935
+          calc_fnc: AVG
+          item:
+            host: pfSense by SNMP
+            key: pf.if.ip4.out.block.bytes[{#SNMPVALUE}]
+    - uuid: b83951f65ad4459ab05ad1248b494a34
+      name: pf tables discovery
+      type: SNMP_AGENT
+      snmp_oid: discovery[{#SNMPVALUE},1.3.6.1.4.1.12325.1.200.1.9.2.1.2]
+      key: pf.table.discovery
+      delay: 1h
+      description: Discovers pf tables (pfTablesTblName) — blocklists such as sshguard, snort2c, bogons, virusprot and network alias tables.
+      item_prototypes:
+      - uuid: 6bc87a75f5864123bcb368fecb4be18e
+        name: 'pf Table {#SNMPVALUE}: Entry count'
+        type: SNMP_AGENT
+        snmp_oid: get[1.3.6.1.4.1.12325.1.200.1.9.2.1.3.{#SNMPINDEX}]
+        key: pf.table.count[{#SNMPVALUE}]
+        description: 'pfTablesTblCount — current number of IP addresses/networks in this pf table. For sshguard/snort2c/virusprot: growing count indicates active blocking.'
+        delay: '60'
+        history: 1w
+        value_type: UNSIGNED
+        units: entries
+        tags:
+        - tag: component
+          value: firewall
+        trigger_prototypes:
+        - uuid: db2736affce94cdc9930a610f75d095a
+          expression: last(/pfSense by SNMP/pf.table.count[{#SNMPVALUE}])>{$PF.TABLE.COUNT.WARN} and {$ENABLE_PF_TABLE_ALERT:"{#SNMPVALUE}"}=1
+          name: 'pf Table {#SNMPVALUE}: High entry count (>{$PF.TABLE.COUNT.WARN})'
+          priority: WARNING
+          description: pf table {#SNMPVALUE} contains more than {$PF.TABLE.COUNT.WARN} entries. For dynamic blocklists (sshguard, snort2c, virusprot) this may indicate an ongoing attack.
+          tags:
+          - tag: scope
+            value: security
+      - uuid: b5c42dad04b94085be205665423cc935
+        name: 'pf Table {#SNMPVALUE}: Match rate'
+        type: SNMP_AGENT
+        snmp_oid: get[1.3.6.1.4.1.12325.1.200.1.9.2.1.7.{#SNMPINDEX}]
+        key: pf.table.eval.match.rate[{#SNMPVALUE}]
+        description: pfTablesTblEvalMatch — packets per second that matched an entry in this table.
+        delay: '60'
+        history: 1w
+        value_type: FLOAT
+        units: pps
+        preprocessing:
+        - type: CHANGE_PER_SECOND
+          parameters:
+          - ''
+        tags:
+        - tag: component
+          value: firewall
+      - uuid: d4722bcd61b64820aeb66913e337888e
+        name: 'pf Table {#SNMPVALUE}: No-match rate'
+        type: SNMP_AGENT
+        snmp_oid: get[1.3.6.1.4.1.12325.1.200.1.9.2.1.8.{#SNMPINDEX}]
+        key: pf.table.eval.nomatch.rate[{#SNMPVALUE}]
+        description: pfTablesTblEvalNoMatch — packets per second evaluated against this table but not found in it.
+        delay: '60'
+        history: 1w
+        value_type: FLOAT
+        units: pps
+        preprocessing:
+        - type: CHANGE_PER_SECOND
+          parameters:
+          - ''
+        tags:
+        - tag: component
+          value: firewall
+      graph_prototypes:
+      - uuid: 52dcd4804a634be3afbcdfbab06a7636
+        name: 'pf Table {#SNMPVALUE}: Match rate'
+        graph_items:
+        - sortorder: '0'
+          color: E53935
+          calc_fnc: AVG
+          item:
+            host: pfSense by SNMP
+            key: pf.table.eval.match.rate[{#SNMPVALUE}]
+        - sortorder: '1'
+          color: 1A7C11
+          calc_fnc: AVG
+          item:
+            host: pfSense by SNMP
+            key: pf.table.eval.nomatch.rate[{#SNMPVALUE}]
+    - uuid: 62f54fbf15c2402195dee34ddc97b6ad
+      name: pf rules discovery
+      type: SNMP_AGENT
+      snmp_oid: discovery[{#SNMPVALUE},1.3.6.1.4.1.12325.1.200.1.11.2.1.2]
+      key: pf.label.discovery
+      delay: 1h
+      description: 'Discovers pf labeled rules (pfLabelsLblName). Only rules with a non-empty label are discovered. Note: multiple rules can share the same label (e.g. IPv4+IPv6 variants) — items are keyed
+        by index.'
+      filter:
+        evaltype: AND
+        conditions:
+        - macro: '{#SNMPVALUE}'
+          value: ^.+$
+          operator: MATCHES_REGEX
+          formulaid: A
+      item_prototypes:
+      - uuid: a531cb6e480640abba3feb930f56ae2d
+        name: 'pf Rule [{#SNMPINDEX}] {#SNMPVALUE}: Inbound packets'
+        type: SNMP_AGENT
+        snmp_oid: get[1.3.6.1.4.1.12325.1.200.1.11.2.1.6.{#SNMPINDEX}]
+        key: pf.label.pkts.in[{#SNMPINDEX}]
+        description: pfLabelsLblPktsIn — inbound packets per second matched by this pf rule.
+        delay: '60'
+        history: 1w
+        value_type: FLOAT
+        units: pps
+        preprocessing:
+        - type: CHANGE_PER_SECOND
+          parameters:
+          - ''
+        tags:
+        - tag: component
+          value: firewall
+      - uuid: f8c647aaee2647f493f397d9929d36e8
+        name: 'pf Rule [{#SNMPINDEX}] {#SNMPVALUE}: Outbound packets'
+        type: SNMP_AGENT
+        snmp_oid: get[1.3.6.1.4.1.12325.1.200.1.11.2.1.7.{#SNMPINDEX}]
+        key: pf.label.pkts.out[{#SNMPINDEX}]
+        description: pfLabelsLblPktsOut — outbound packets per second matched by this pf rule.
+        delay: '60'
+        history: 1w
+        value_type: FLOAT
+        units: pps
+        preprocessing:
+        - type: CHANGE_PER_SECOND
+          parameters:
+          - ''
+        tags:
+        - tag: component
+          value: firewall
+      - uuid: 726299d78a6346839a9b6f30a5b15b97
+        name: 'pf Rule [{#SNMPINDEX}] {#SNMPVALUE}: Inbound bytes'
+        type: SNMP_AGENT
+        snmp_oid: get[1.3.6.1.4.1.12325.1.200.1.11.2.1.4.{#SNMPINDEX}]
+        key: pf.label.bytes.in[{#SNMPINDEX}]
+        description: pfLabelsLblBytesIn — inbound bytes per second matched by this pf rule.
+        delay: '60'
+        history: 1w
+        value_type: FLOAT
+        units: Bps
+        preprocessing:
+        - type: CHANGE_PER_SECOND
+          parameters:
+          - ''
+        tags:
+        - tag: component
+          value: firewall
+      - uuid: 5a1cf3efc7734f8a85d969bc9e16d144
+        name: 'pf Rule [{#SNMPINDEX}] {#SNMPVALUE}: Outbound bytes'
+        type: SNMP_AGENT
+        snmp_oid: get[1.3.6.1.4.1.12325.1.200.1.11.2.1.5.{#SNMPINDEX}]
+        key: pf.label.bytes.out[{#SNMPINDEX}]
+        description: pfLabelsLblBytesOut — outbound bytes per second matched by this pf rule.
+        delay: '60'
+        history: 1w
+        value_type: FLOAT
+        units: Bps
+        preprocessing:
+        - type: CHANGE_PER_SECOND
+          parameters:
+          - ''
+        tags:
+        - tag: component
+          value: firewall
+      graph_prototypes:
+      - uuid: 317616f0d2d24cfbb0718f0531b2053e
+        name: 'pf Rule [{#SNMPINDEX}] {#SNMPVALUE}: Traffic'
+        graph_items:
+        - sortorder: '0'
+          color: 1A7C11
+          calc_fnc: AVG
+          item:
+            host: pfSense by SNMP
+            key: pf.label.bytes.in[{#SNMPINDEX}]
+        - sortorder: '1'
+          color: E53935
+          calc_fnc: AVG
+          item:
+            host: pfSense by SNMP
+            key: pf.label.bytes.out[{#SNMPINDEX}]
+    dashboards:
+    - uuid: a1f47c640a784abe9ef2a4f1fa0c15e2
+      name: pfSense Overview
+      pages:
+      - name: Overview
+        widgets:
+        - type: item
+          name: pf Firewall Status
+          x: '0'
+          y: '0'
+          width: '9'
+          height: '3'
+          fields:
+          - type: ITEM
+            name: itemid
+            value:
+              host: pfSense by SNMP
+              key: pf.running
+          - type: INTEGER
+            name: show_description
+            value: '0'
+        - type: item
+          name: System Uptime
+          x: '9'
+          y: '0'
+          width: '9'
+          height: '3'
+          fields:
+          - type: ITEM
+            name: itemid
+            value:
+              host: pfSense by SNMP
+              key: system.uptime
+          - type: INTEGER
+            name: show_description
+            value: '0'
+        - type: item
+          name: pf State Table Utilization
+          x: '18'
+          y: '0'
+          width: '9'
+          height: '3'
+          fields:
+          - type: ITEM
+            name: itemid
+            value:
+              host: pfSense by SNMP
+              key: pf.states.util
+          - type: INTEGER
+            name: show_description
+            value: '0'
+        - type: item
+          name: System Hostname
+          x: '27'
+          y: '0'
+          width: '9'
+          height: '3'
+          fields:
+          - type: ITEM
+            name: itemid
+            value:
+              host: pfSense by SNMP
+              key: system.hostname
+          - type: INTEGER
+            name: show_description
+            value: '0'
+        - type: problems
+          name: Active Problems
+          x: '0'
+          y: '3'
+          width: '36'
+          height: '5'
+          fields:
+          - type: INTEGER
+            name: show_suppressed
+            value: '0'
+        - type: item
+          name: 'pf State Table: Current'
+          x: '0'
+          y: '8'
+          width: '12'
+          height: '3'
+          fields:
+          - type: ITEM
+            name: itemid
+            value:
+              host: pfSense by SNMP
+              key: pf.states.current
+          - type: INTEGER
+            name: show_description
+            value: '0'
+        - type: item
+          name: 'pf State Table: Limit'
+          x: '12'
+          y: '8'
+          width: '12'
+          height: '3'
+          fields:
+          - type: ITEM
+            name: itemid
+            value:
+              host: pfSense by SNMP
+              key: pf.states.limit
+          - type: INTEGER
+            name: show_description
+            value: '0'
+        - type: item
+          name: Source Nodes
+          x: '24'
+          y: '8'
+          width: '12'
+          height: '3'
+          fields:
+          - type: ITEM
+            name: itemid
+            value:
+              host: pfSense by SNMP
+              key: pf.src.nodes
+          - type: INTEGER
+            name: show_description
+            value: '0'
+        - type: item
+          name: CPU Utilization
+          x: '0'
+          y: '11'
+          width: '9'
+          height: '3'
+          fields:
+          - type: ITEM
+            name: itemid
+            value:
+              host: pfSense by SNMP
+              key: system.cpu.util
+          - type: INTEGER
+            name: show_description
+            value: '0'
+        - type: item
+          name: Memory Utilization
+          x: '9'
+          y: '11'
+          width: '9'
+          height: '3'
+          fields:
+          - type: ITEM
+            name: itemid
+            value:
+              host: pfSense by SNMP
+              key: vm.memory.util
+          - type: INTEGER
+            name: show_description
+            value: '0'
+        - type: item
+          name: Swap Utilization
+          x: '18'
+          y: '11'
+          width: '9'
+          height: '3'
+          fields:
+          - type: ITEM
+            name: itemid
+            value:
+              host: pfSense by SNMP
+              key: vm.memory.swap.util
+          - type: INTEGER
+            name: show_description
+            value: '0'
+        - type: item
+          name: IP Forwarding
+          x: '27'
+          y: '11'
+          width: '9'
+          height: '3'
+          fields:
+          - type: ITEM
+            name: itemid
+            value:
+              host: pfSense by SNMP
+              key: system.ipforward
+          - type: INTEGER
+            name: show_description
+            value: '0'
+        - type: item
+          name: System Description
+          x: '0'
+          y: '14'
+          width: '18'
+          height: '3'
+          fields:
+          - type: ITEM
+            name: itemid
+            value:
+              host: pfSense by SNMP
+              key: system.descr
+          - type: INTEGER
+            name: show_description
+            value: '0'
+        - type: item
+          name: System Location
+          x: '18'
+          y: '14'
+          width: '9'
+          height: '3'
+          fields:
+          - type: ITEM
+            name: itemid
+            value:
+              host: pfSense by SNMP
+              key: system.location
+          - type: INTEGER
+            name: show_description
+            value: '0'
+        - type: item
+          name: System Contact
+          x: '27'
+          y: '14'
+          width: '9'
+          height: '3'
+          fields:
+          - type: ITEM
+            name: itemid
+            value:
+              host: pfSense by SNMP
+              key: system.contact
+          - type: INTEGER
+            name: show_description
+            value: '0'
+        - type: item
+          name: 'Version: Installed'
+          x: '0'
+          y: '17'
+          width: '18'
+          height: '3'
+          fields:
+          - type: ITEM
+            name: itemid
+            value:
+              host: pfSense by SNMP
+              key: pfsense.version
+          - type: INTEGER
+            name: show_description
+            value: '0'
+        - type: item
+          name: 'Version: Available'
+          x: '18'
+          y: '17'
+          width: '18'
+          height: '3'
+          fields:
+          - type: ITEM
+            name: itemid
+            value:
+              host: pfSense by SNMP
+              key: pfsense.version.available
+          - type: INTEGER
+            name: show_description
+            value: '0'
+      - name: Interfaces
+        widgets:
+        - type: graphprototype
+          name: Interface Traffic
+          x: '0'
+          y: '0'
+          width: '36'
+          height: '8'
+          fields:
+          - type: INTEGER
+            name: columns
+            value: '2'
+          - type: GRAPH_PROTOTYPE
+            name: graphid.0
+            value:
+              host: pfSense by SNMP
+              name: 'Interface {#SNMPVALUE}: Traffic'
+          - type: STRING
+            name: reference
+            value: AAPFS
+      - name: CPU & Storage
+        widgets:
+        - type: item
+          name: CPU Utilization
+          x: '0'
+          y: '0'
+          width: '9'
+          height: '3'
+          fields:
+          - type: ITEM
+            name: itemid
+            value:
+              host: pfSense by SNMP
+              key: system.cpu.util
+          - type: INTEGER
+            name: show_description
+            value: '1'
+        - type: item
+          name: Memory Utilization
+          x: '9'
+          y: '0'
+          width: '9'
+          height: '3'
+          fields:
+          - type: ITEM
+            name: itemid
+            value:
+              host: pfSense by SNMP
+              key: vm.memory.util
+          - type: INTEGER
+            name: show_description
+            value: '1'
+        - type: item
+          name: Swap Utilization
+          x: '18'
+          y: '0'
+          width: '9'
+          height: '3'
+          fields:
+          - type: ITEM
+            name: itemid
+            value:
+              host: pfSense by SNMP
+              key: vm.memory.swap.util
+          - type: INTEGER
+            name: show_description
+            value: '1'
+        - type: item
+          name: Load Average (5 min)
+          x: '27'
+          y: '0'
+          width: '9'
+          height: '3'
+          fields:
+          - type: ITEM
+            name: itemid
+            value:
+              host: pfSense by SNMP
+              key: system.load.avg5
+          - type: INTEGER
+            name: show_description
+            value: '1'
+        - type: graphprototype
+          name: CPU Utilization per Core
+          x: '0'
+          y: '3'
+          width: '36'
+          height: '7'
+          fields:
+          - type: INTEGER
+            name: columns
+            value: '2'
+          - type: GRAPH_PROTOTYPE
+            name: graphid.0
+            value:
+              host: pfSense by SNMP
+              name: 'CPU core {#SNMPINDEX}: Utilization'
+          - type: STRING
+            name: reference
+            value: BBPFS
+        - type: graphprototype
+          name: Storage Utilization
+          x: '0'
+          y: '10'
+          width: '18'
+          height: '7'
+          fields:
+          - type: INTEGER
+            name: columns
+            value: '2'
+          - type: GRAPH_PROTOTYPE
+            name: graphid.0
+            value:
+              host: pfSense by SNMP
+              name: 'Storage {#SNMPVALUE}: Utilization'
+          - type: STRING
+            name: reference
+            value: CCPFS
+        - type: graphprototype
+          name: Disk I/O Throughput
+          x: '18'
+          y: '10'
+          width: '18'
+          height: '7'
+          fields:
+          - type: INTEGER
+            name: columns
+            value: '2'
+          - type: GRAPH_PROTOTYPE
+            name: graphid.0
+            value:
+              host: pfSense by SNMP
+              name: 'Disk {#SNMPVALUE}: I/O throughput'
+          - type: STRING
+            name: reference
+            value: DDPFS
+      - name: pf Firewall
+        widgets:
+        - type: item
+          name: New Connections/s
+          x: '0'
+          y: '0'
+          width: '9'
+          height: '3'
+          fields:
+          - type: ITEM
+            name: itemid
+            value:
+              host: pfSense by SNMP
+              key: pf.states.inserts.rate
+          - type: INTEGER
+            name: show_description
+            value: '0'
+        - type: item
+          name: Closed Connections/s
+          x: '9'
+          y: '0'
+          width: '9'
+          height: '3'
+          fields:
+          - type: ITEM
+            name: itemid
+            value:
+              host: pfSense by SNMP
+              key: pf.states.removals.rate
+          - type: INTEGER
+            name: show_description
+            value: '0'
+        - type: item
+          name: IPv4 Inbound Passed/s
+          x: '18'
+          y: '0'
+          width: '9'
+          height: '3'
+          fields:
+          - type: ITEM
+            name: itemid
+            value:
+              host: pfSense by SNMP
+              key: pf.log.ip4.in.pass.rate
+          - type: INTEGER
+            name: show_description
+            value: '0'
+        - type: item
+          name: IPv4 Inbound Dropped/s
+          x: '27'
+          y: '0'
+          width: '9'
+          height: '3'
+          fields:
+          - type: ITEM
+            name: itemid
+            value:
+              host: pfSense by SNMP
+              key: pf.log.ip4.in.drop.rate
+          - type: INTEGER
+            name: show_description
+            value: '0'
+        - type: graphprototype
+          name: pf Pass vs Block per Interface (inbound)
+          x: '0'
+          y: '3'
+          width: '18'
+          height: '7'
+          fields:
+          - type: INTEGER
+            name: columns
+            value: '2'
+          - type: GRAPH_PROTOTYPE
+            name: graphid.0
+            value:
+              host: pfSense by SNMP
+              name: 'pf Interface {#SNMPVALUE}: Passed vs Blocked (inbound)'
+          - type: STRING
+            name: reference
+            value: EEPFS
+        - type: graphprototype
+          name: pf Pass vs Block per Interface (outbound)
+          x: '18'
+          y: '3'
+          width: '18'
+          height: '7'
+          fields:
+          - type: INTEGER
+            name: columns
+            value: '2'
+          - type: GRAPH_PROTOTYPE
+            name: graphid.0
+            value:
+              host: pfSense by SNMP
+              name: 'pf Interface {#SNMPVALUE}: Passed vs Blocked (outbound)'
+          - type: STRING
+            name: reference
+            value: FFPFS
+      - name: pf Tables
+        widgets:
+        - type: graphprototype
+          name: pf Table Match Rates
+          x: '0'
+          y: '0'
+          width: '36'
+          height: '8'
+          fields:
+          - type: INTEGER
+            name: columns
+            value: '3'
+          - type: GRAPH_PROTOTYPE
+            name: graphid.0
+            value:
+              host: pfSense by SNMP
+              name: 'pf Table {#SNMPVALUE}: Match rate'
+          - type: STRING
+            name: reference
+            value: GGPFS
+      - name: pf Rules
+        widgets:
+        - type: graphprototype
+          name: pf Rule Traffic
+          x: '0'
+          y: '0'
+          width: '36'
+          height: '10'
+          fields:
+          - type: INTEGER
+            name: columns
+            value: '3'
+          - type: GRAPH_PROTOTYPE
+            name: graphid.0
+            value:
+              host: pfSense by SNMP
+              name: 'pf Rule [{#SNMPINDEX}] {#SNMPVALUE}: Traffic'
+          - type: STRING
+            name: reference
+            value: HHPFS
+    valuemaps:
+    - uuid: 0462991ea5454ca1ba88314f51f41738
+      name: Service state
+      mappings:
+      - value: '0'
+        newvalue: Down
+      - value: '1'
+        newvalue: Up
+    - uuid: 2398a6377d204c638a631051d7610925
+      name: pfSense pf status
+      mappings:
+      - value: '1'
+        newvalue: running
+      - value: '2'
+        newvalue: stopped
+      - type: DEFAULT
+        newvalue: unknown
+    - uuid: 52cb33702153442d86b827c5fdae460e
+      name: IF-MIB::ifAdminStatus
+      mappings:
+      - value: '1'
+        newvalue: up
+      - value: '2'
+        newvalue: down
+      - value: '3'
+        newvalue: testing
+    - uuid: e7edf8f9c13e494d9c902095d5f513cf
+      name: IF-MIB::ifOperStatus
+      mappings:
+      - value: '1'
+        newvalue: up
+      - value: '2'
+        newvalue: down
+      - value: '3'
+        newvalue: testing
+      - value: '4'
+        newvalue: unknown
+      - value: '5'
+        newvalue: dormant
+      - value: '6'
+        newvalue: notPresent
+      - value: '7'
+        newvalue: lowerLayerDown
+    - uuid: 6ba7d28c2849449688219996aab566a2
+      name: pfSense IP forwarding
+      mappings:
+      - value: '1'
+        newvalue: forwarding
+      - value: '2'
+        newvalue: notForwarding
+      - type: DEFAULT
+        newvalue: unknown
